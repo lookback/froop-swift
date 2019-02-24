@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Classes  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Section/Classes" class="dashAnchor"></a>
+    <a title="Classes  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html">froop Docs</a> (100% documented)</p>
+        <p class="header-right"><a href="https://github.com/lookback/froop-swift"><img src="img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html">froop Reference</a>
+        <img id="carat" src="img/carat.png" />
+        Classes  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/Collector.html">Collector</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Imitator.html">Imitator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes.html#/s:5froop12MemoryStreamC">MemoryStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Sink.html">Sink</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Stream.html">Stream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Subscription.html">Subscription</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_tGADyxG_ADyq_Gtr0_lF">combine(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_tGADyxG_ADyq_GADyq0_Gtr1_lF">combine(_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_tGADyxG_ADyq_GADyq0_GADyq1_Gtr2_lF">combine(_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_q2_tGADyxG_ADyq_GADyq0_GADyq1_GADyq2_Gtr3_lF">combine(_:_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7flatten6nestedAA6StreamCyxGAEyAFG_tlF">flatten(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop19flattenConcurrently6nestedAA6StreamCyxGAEyAFG_tlF">flattenConcurrently(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop5mergeyAA6StreamCyxGAEd_tlF">merge(_:)</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Classes</h1>
+            <p>The following classes are available globally.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC"></a>
+                    <a name="//apple_ref/swift/Class/Stream" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC">Stream</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Stream of vaules over time. Typically created by a Sink.</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sink</span> <span class="o">=</span> <span class="kt">Sink</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span><span class="p">()</span>
+
+<span class="k">let</span> <span class="nv">stream</span> <span class="o">=</span> <span class="n">sink</span><span class="o">.</span><span class="nf">stream</span><span class="p">()</span>
+<span class="k">let</span> <span class="nv">double</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="nf">map</span><span class="p">()</span> <span class="p">{</span> <span class="nv">$0</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">}</span>
+
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>
+</code></pre>
+
+<p>For some detailed notes on how a combinator is structured for ARC and thread
+safety, see the source code for the <code>.map()</code> function. All operations follow
+ a similar pattern.</p>
+
+                        <a href="Classes/Stream.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop12MemoryStreamC"></a>
+                    <a name="//apple_ref/swift/Class/MemoryStream" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop12MemoryStreamC">MemoryStream</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Specialization of Stream that has <q>memory</q>. Memory means that any
+new listener added will straight away get the last value that went through the stream.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">MemoryStream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop4SinkC"></a>
+                    <a name="//apple_ref/swift/Class/Sink" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop4SinkC">Sink</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The originator of a stream of values.</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sink</span> <span class="o">=</span> <span class="kt">Sink</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span><span class="p">()</span>
+
+<span class="k">let</span> <span class="nv">stream</span> <span class="o">=</span> <span class="n">sink</span><span class="o">.</span><span class="nf">stream</span><span class="p">()</span>
+
+<span class="o">...</span>
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sink</span><span class="o">.</span><span class="nf">end</span><span class="p">()</span>
+</code></pre>
+
+                        <a href="Classes/Sink.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Sink</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop9CollectorC"></a>
+                    <a name="//apple_ref/swift/Class/Collector" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop9CollectorC">Collector</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Helper to collect values from a stream. Mainly useful for tests.</p>
+
+                        <a href="Classes/Collector.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Collector</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop12SubscriptionC"></a>
+                    <a name="//apple_ref/swift/Class/Subscription" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop12SubscriptionC">Subscription</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Subscriptions are receipts to the <code>Stream.subscribe()</code> operation. They
+can be used to unsubscribe.</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sink</span> <span class="o">=</span> <span class="kt">Sink</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span><span class="p">()</span>
+
+<span class="k">let</span> <span class="nv">sub</span> <span class="o">=</span> <span class="n">sink</span><span class="o">.</span><span class="nf">stream</span><span class="p">()</span><span class="o">.</span><span class="nf">subscribe</span><span class="p">()</span> <span class="p">{</span> <span class="nf">print</span><span class="p">(</span><span class="s">"</span><span class="se">\(</span><span class="nv">$0</span><span class="se">)</span><span class="s">"</span><span class="p">)</span> <span class="p">}</span>
+
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">sub</span><span class="o">.</span><span class="nf">unsubscribe</span><span class="p">()</span>
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1">// not received</span>
+</code></pre>
+
+                        <a href="Classes/Subscription.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Subscription</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop8ImitatorC"></a>
+                    <a name="//apple_ref/swift/Class/Imitator" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop8ImitatorC">Imitator</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Imitators are used to create cyclic streams. The imitator is an originator
+of a stream at the same time as it imitates some other stream further down
+the code.</p>
+
+<p>Here&rsquo;s a bad idea illustrating the usage:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">imitator</span> <span class="o">=</span> <span class="kt">Imitator</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span><span class="p">()</span> <span class="n">stream</span> <span class="n">of</span> <span class="n">int</span>
+
+<span class="k">let</span> <span class="nv">x</span> <span class="o">=</span> <span class="n">imitator</span><span class="o">.</span><span class="nf">stream</span><span class="p">()</span><span class="o">.</span><span class="nf">map</span><span class="p">()</span> <span class="p">{</span> <span class="nv">$0</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">}</span> <span class="c1">// use imitator stream</span>
+<span class="k">let</span> <span class="nv">y</span><span class="p">:</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="k">let</span> <span class="nv">m</span> <span class="o">=</span> <span class="kt">Stream</span><span class="o">.</span><span class="nf">merge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="c1">// merge imiator with other stream</span>
+
+<span class="n">imitator</span><span class="o">.</span><span class="nf">imitate</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="c1">// cycle all m up to imitator, this can only be done once</span>
+
+<span class="c1">// NB. This is a BAD IDEA, beacuse it causes an endless loop. Imitators must</span>
+<span class="c1">// be used with care to not spin out of control.</span>
+</code></pre>
+
+                        <a href="Classes/Imitator.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Imitator</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2019 <a class="link" href="https://lookback.io" target="_blank" rel="external">Lookback</a>. All rights reserved. (Last updated: 2019-02-24)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

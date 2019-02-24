@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Functions  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Section/Functions" class="dashAnchor"></a>
+    <a title="Functions  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html">froop Docs</a> (100% documented)</p>
+        <p class="header-right"><a href="https://github.com/lookback/froop-swift"><img src="img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html">froop Reference</a>
+        <img id="carat" src="img/carat.png" />
+        Functions  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/Collector.html">Collector</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Imitator.html">Imitator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes.html#/s:5froop12MemoryStreamC">MemoryStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Sink.html">Sink</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Stream.html">Stream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Subscription.html">Subscription</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_tGADyxG_ADyq_Gtr0_lF">combine(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_tGADyxG_ADyq_GADyq0_Gtr1_lF">combine(_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_tGADyxG_ADyq_GADyq0_GADyq1_Gtr2_lF">combine(_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_q2_tGADyxG_ADyq_GADyq0_GADyq1_GADyq2_Gtr3_lF">combine(_:_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop7flatten6nestedAA6StreamCyxGAEyAFG_tlF">flatten(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop19flattenConcurrently6nestedAA6StreamCyxGAEyAFG_tlF">flattenConcurrently(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:5froop5mergeyAA6StreamCyxGAEd_tlF">merge(_:)</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Functions</h1>
+            <p>The following functions are available globally.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop7flatten6nestedAA6StreamCyxGAEyAFG_tlF"></a>
+                    <a name="//apple_ref/swift/Function/flatten(nested:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop7flatten6nestedAA6StreamCyxGAEyAFG_tlF">flatten(nested:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Flatten a stream of streams, sequentially. This means that any new stream
+effectively interrupts the previous stream and we only get values from
+the latest stream.</p>
+
+<p>Swift doesn&rsquo;t do recursive types, so we can&rsquo;t make an extension for this.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">flatten</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">nested</span><span class="p">:</span> <span class="n">froop</span><span class="o">.</span><span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="n">froop</span><span class="o">.</span><span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop19flattenConcurrently6nestedAA6StreamCyxGAEyAFG_tlF"></a>
+                    <a name="//apple_ref/swift/Function/flattenConcurrently(nested:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop19flattenConcurrently6nestedAA6StreamCyxGAEyAFG_tlF">flattenConcurrently(nested:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Flatten a stream of streams, concurrently. This means that any new stream
+is just added to the current subscribed streams. We listen to all streams
+coming.</p>
+
+<p>Swift doesn&rsquo;t do recursive types, so we can&rsquo;t make an extension for this.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">flattenConcurrently</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">nested</span><span class="p">:</span> <span class="n">froop</span><span class="o">.</span><span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="n">froop</span><span class="o">.</span><span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop5mergeyAA6StreamCyxGAEd_tlF"></a>
+                    <a name="//apple_ref/swift/Function/merge(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop5mergeyAA6StreamCyxGAEd_tlF">merge(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Merge a bunch of streams emitting the same T to one.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">merge</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">streams</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/ABANDON%20ALL%20HOPE%20YE%20WHO%20ENTERS%20HERE!"></a>
+                <a name="//apple_ref/swift/Section/ABANDON ALL HOPE YE WHO ENTERS HERE!" class="dashAnchor"></a>
+                <a href="#/ABANDON%20ALL%20HOPE%20YE%20WHO%20ENTERS%20HERE!">
+                  <h3 class="section-name">ABANDON ALL HOPE YE WHO ENTERS HERE!</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop7combineyAA6StreamCyx_q_tGADyxG_ADyq_Gtr0_lF"></a>
+                    <a name="//apple_ref/swift/Function/combine(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop7combineyAA6StreamCyx_q_tGADyxG_ADyq_Gtr0_lF">combine(_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Combine a number of streams and emit values when any of them emit a value.</p>
+
+<p>All streams must have had at least one value before anything happens.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">combine</span><span class="o">&lt;</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">a</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">A</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">b</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">B</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="p">(</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="p">)</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop7combineyAA6StreamCyx_q_q0_tGADyxG_ADyq_GADyq0_Gtr1_lF"></a>
+                    <a name="//apple_ref/swift/Function/combine(_:_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop7combineyAA6StreamCyx_q_q0_tGADyxG_ADyq_GADyq0_Gtr1_lF">combine(_:_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Combine a number of streams and emit values when any of them emit a value.</p>
+
+<p>All streams must have had at least one value before anything happens.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">combine</span><span class="o">&lt;</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="p">,</span> <span class="kt">C</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">a</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">A</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">b</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">B</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">c</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">C</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="p">(</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="p">,</span> <span class="kt">C</span><span class="p">)</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop7combineyAA6StreamCyx_q_q0_q1_tGADyxG_ADyq_GADyq0_GADyq1_Gtr2_lF"></a>
+                    <a name="//apple_ref/swift/Function/combine(_:_:_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop7combineyAA6StreamCyx_q_q0_q1_tGADyxG_ADyq_GADyq0_GADyq1_Gtr2_lF">combine(_:_:_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Combine a number of streams and emit values when any of them emit a value.</p>
+
+<p>All streams must have had at least one value before anything happens.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">combine</span><span class="o">&lt;</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="p">,</span> <span class="kt">C</span><span class="p">,</span> <span class="kt">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">a</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">A</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">b</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">B</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">c</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">C</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">d</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">D</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="p">(</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="p">,</span> <span class="kt">C</span><span class="p">,</span> <span class="kt">D</span><span class="p">)</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop7combineyAA6StreamCyx_q_q0_q1_q2_tGADyxG_ADyq_GADyq0_GADyq1_GADyq2_Gtr3_lF"></a>
+                    <a name="//apple_ref/swift/Function/combine(_:_:_:_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop7combineyAA6StreamCyx_q_q0_q1_q2_tGADyxG_ADyq_GADyq0_GADyq1_GADyq2_Gtr3_lF">combine(_:_:_:_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Combine a number of streams and emit values when any of them emit a value.</p>
+
+<p>All streams must have had at least one value before anything happens.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">combine</span><span class="o">&lt;</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="p">,</span> <span class="kt">C</span><span class="p">,</span> <span class="kt">D</span><span class="p">,</span> <span class="kt">E</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">a</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">A</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">b</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">B</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">c</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">C</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">d</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">D</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">_</span> <span class="nv">e</span><span class="p">:</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="kt">E</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Classes/Stream.html">Stream</a></span><span class="o">&lt;</span><span class="p">(</span><span class="kt">A</span><span class="p">,</span> <span class="kt">B</span><span class="p">,</span> <span class="kt">C</span><span class="p">,</span> <span class="kt">D</span><span class="p">,</span> <span class="kt">E</span><span class="p">)</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2019 <a class="link" href="https://lookback.io" target="_blank" rel="external">Lookback</a>. All rights reserved. (Last updated: 2019-02-24)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Collector Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/Collector" class="dashAnchor"></a>
+    <a title="Collector Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">froop Docs</a> (100% documented)</p>
+        <p class="header-right"><a href="https://github.com/lookback/froop-swift"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">froop Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        Collector Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/Collector.html">Collector</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Imitator.html">Imitator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:5froop12MemoryStreamC">MemoryStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Sink.html">Sink</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Stream.html">Stream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Subscription.html">Subscription</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_tGADyxG_ADyq_Gtr0_lF">combine(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_tGADyxG_ADyq_GADyq0_Gtr1_lF">combine(_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_tGADyxG_ADyq_GADyq0_GADyq1_Gtr2_lF">combine(_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_q2_tGADyxG_ADyq_GADyq0_GADyq1_GADyq2_Gtr3_lF">combine(_:_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7flatten6nestedAA6StreamCyxGAEyAFG_tlF">flatten(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop19flattenConcurrently6nestedAA6StreamCyxGAEyAFG_tlF">flattenConcurrently(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop5mergeyAA6StreamCyxGAEd_tlF">merge(_:)</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Collector</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Collector</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                </div>
+              </div>
+            <p>Helper to collect values from a stream. Mainly useful for tests.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop9CollectorC4waitSayxGyF"></a>
+                    <a name="//apple_ref/swift/Method/wait()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop9CollectorC4waitSayxGyF">wait()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Stall the thread and wait for the stream this collector works off to end.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">wait</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">T</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop9CollectorC4takeSayxGyF"></a>
+                    <a name="//apple_ref/swift/Method/take()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop9CollectorC4takeSayxGyF">take()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Take whatever values are in the collector without waiting for
+the stream to end.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">take</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">T</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2019 <a class="link" href="https://lookback.io" target="_blank" rel="external">Lookback</a>. All rights reserved. (Last updated: 2019-02-24)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

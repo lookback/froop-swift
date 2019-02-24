@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Stream Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/Stream" class="dashAnchor"></a>
+    <a title="Stream Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">froop Docs</a> (100% documented)</p>
+        <p class="header-right"><a href="https://github.com/lookback/froop-swift"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">froop Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        Stream Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/Collector.html">Collector</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Imitator.html">Imitator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:5froop12MemoryStreamC">MemoryStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Sink.html">Sink</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Stream.html">Stream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Subscription.html">Subscription</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_tGADyxG_ADyq_Gtr0_lF">combine(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_tGADyxG_ADyq_GADyq0_Gtr1_lF">combine(_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_tGADyxG_ADyq_GADyq0_GADyq1_Gtr2_lF">combine(_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7combineyAA6StreamCyx_q_q0_q1_q2_tGADyxG_ADyq_GADyq0_GADyq1_GADyq2_Gtr3_lF">combine(_:_:_:_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop7flatten6nestedAA6StreamCyxGAEyAFG_tlF">flatten(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop19flattenConcurrently6nestedAA6StreamCyxGAEyAFG_tlF">flattenConcurrently(nested:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:5froop5mergeyAA6StreamCyxGAEd_tlF">merge(_:)</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Stream</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                </div>
+              </div>
+            <p>Stream of vaules over time. Typically created by a Sink.</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">sink</span> <span class="o">=</span> <span class="kt">Sink</span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span><span class="p">()</span>
+
+<span class="k">let</span> <span class="nv">stream</span> <span class="o">=</span> <span class="n">sink</span><span class="o">.</span><span class="nf">stream</span><span class="p">()</span>
+<span class="k">let</span> <span class="nv">double</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="nf">map</span><span class="p">()</span> <span class="p">{</span> <span class="nv">$0</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">}</span>
+
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">sink</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>
+</code></pre>
+
+<p>For some detailed notes on how a combinator is structured for ARC and thread
+safety, see the source code for the <code>.map()</code> function. All operations follow
+ a similar pattern.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC9subscribeyAA12SubscriptionCyxGyxSgcF"></a>
+                    <a name="//apple_ref/swift/Method/subscribe(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC9subscribeyAA12SubscriptionCyxGyxSgcF">subscribe(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Subscribe to values from this stream. Nil indicates the end of
+the stream and no more values to come.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">subscribe</span><span class="p">(</span><span class="n">_</span> <span class="nv">listener</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/Subscription.html">Subscription</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC7collectAA9CollectorCyxGyF"></a>
+                    <a name="//apple_ref/swift/Method/collect()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC7collectAA9CollectorCyxGyF">collect()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Collect values of this stream into an array of values.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">collect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/Collector.html">Collector</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC8dedupeByyACyxGqd__xcSQRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/dedupeBy(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC8dedupeByyACyxGqd__xcSQRd__lF">dedupeBy(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Dedupe the stream by extracting some equatable value from it.
+The value is compared for consecutive elements.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">dedupeBy</span><span class="o">&lt;</span><span class="kt">U</span><span class="p">:</span> <span class="kt">Equatable</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">f</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">U</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC4drop6amountACyxGSu_tF"></a>
+                    <a name="//apple_ref/swift/Method/drop(amount:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC4drop6amountACyxGSu_tF">drop(amount:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Drop a fixed number of initial values, then start emitting.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">drop</span><span class="p">(</span><span class="nv">amount</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC9dropWhileyACyxGSbxcF"></a>
+                    <a name="//apple_ref/swift/Method/dropWhile(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC9dropWhileyACyxGSbxcF">dropWhile(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Drop values while some condition holds true, then start emitting.
+Once started emitting, it will never drop again.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">dropWhile</span><span class="p">(</span><span class="n">_</span> <span class="nv">f</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC7endWhen5otherACyxGACyqd__G_tlF"></a>
+                    <a name="//apple_ref/swift/Method/endWhen(other:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC7endWhen5otherACyxGACyqd__G_tlF">endWhen(other:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Make a stream that ends when some other stream ends.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">endWhen</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">other</span><span class="p">:</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC6filteryACyxGSbxcF"></a>
+                    <a name="//apple_ref/swift/Method/filter(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC6filteryACyxGSbxcF">filter(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Filter the stream using some sort of test.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">filter</span><span class="p">(</span><span class="n">_</span> <span class="nv">f</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC4foldyAA06MemoryB0Cyqd__Gqd___qd__qd___xtctlF"></a>
+                    <a name="//apple_ref/swift/Method/fold(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC4foldyAA06MemoryB0Cyqd__Gqd___qd__qd___xtctlF">fold(_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Fold the stream by combining values from the past with the new value.
+The seed is emitted as the first value.</p>
+
+<p>This is roughly equivalent of an <code>Array.reduce()</code> or <code>Array.fold()</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">fold</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">seed</span><span class="p">:</span> <span class="kt">U</span><span class="p">,</span> <span class="n">_</span> <span class="nv">f</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">U</span><span class="p">,</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">U</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes.html#/s:5froop12MemoryStreamC">MemoryStream</a></span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC4lastACyxGyF"></a>
+                    <a name="//apple_ref/swift/Method/last()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC4lastACyxGyF">last()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Makes a stream that only emits the last value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">last</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC3mapyACyqd__Gqd__xclF"></a>
+                    <a name="//apple_ref/swift/Method/map(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC3mapyACyqd__Gqd__xclF">map(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Transform values of type T to type U.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">map</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">f</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">U</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC5mapTo5valueACyqd__Gqd___tlF"></a>
+                    <a name="//apple_ref/swift/Method/mapTo(value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC5mapTo5valueACyqd__Gqd___tlF">mapTo(value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Transform any incoming value to one fixed value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">mapTo</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">value</span><span class="p">:</span> <span class="kt">U</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC8rememberAA06MemoryB0CyxGyF"></a>
+                    <a name="//apple_ref/swift/Method/remember()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC8rememberAA06MemoryB0CyxGyF">remember()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Make a stream that remembers the last value. Any new (or combinator) will get the
+last emitted value straight away.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">remember</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes.html#/s:5froop12MemoryStreamC">MemoryStream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC13sampleCombineyACyx_qd__tGACyqd__GlF"></a>
+                    <a name="//apple_ref/swift/Method/sampleCombine(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC13sampleCombineyACyx_qd__tGACyqd__GlF">sampleCombine(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>For every value of this stream, take a sample of the last value of some other
+stream and combine the two.</p>
+
+<p>This stream becomes a kind of <q>trigger</q> for a value that is a combination of two.
+Useful when wanting to filter/gate one stream on a value from some other stream.</p>
+
+<p>No value will be emitted unless <code>other</code> has produced at least one value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">sampleCombine</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">other</span><span class="p">:</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">U</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">T</span><span class="p">,</span> <span class="kt">U</span><span class="p">)</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC9startWith5valueAA06MemoryB0CyxGx_tF"></a>
+                    <a name="//apple_ref/swift/Method/startWith(value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC9startWith5valueAA06MemoryB0CyxGx_tF">startWith(value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Prepend a value to a stream. Or in other words, give a start value to a stream.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">startWith</span><span class="p">(</span><span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes.html#/s:5froop12MemoryStreamC">MemoryStream</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC4take6amountACyxGSu_tF"></a>
+                    <a name="//apple_ref/swift/Method/take(amount:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC4take6amountACyxGSu_tF">take(amount:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Take a fixed amount of elements, then end.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">take</span><span class="p">(</span><span class="nv">amount</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC9takeWhileyACyxGSbxcF"></a>
+                    <a name="//apple_ref/swift/Method/takeWhile(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC9takeWhileyACyxGSbxcF">takeWhile(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Take values from the stream while some condition hold true, then end the stream.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">takeWhile</span><span class="p">(</span><span class="n">_</span> <span class="nv">f</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamC4waityyF"></a>
+                    <a name="//apple_ref/swift/Method/wait()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamC4waityyF">wait()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Stall the thread until the stream to ends.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">wait</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:5froop6StreamCAASQRzlE6dedupeACyxGyF"></a>
+                    <a name="//apple_ref/swift/Method/dedupe()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:5froop6StreamCAASQRzlE6dedupeACyxGyF">dedupe()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Dedupe the stream by the value in the stream itself</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">dedupe</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Stream</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2019 <a class="link" href="https://lookback.io" target="_blank" rel="external">Lookback</a>. All rights reserved. (Last updated: 2019-02-24)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
