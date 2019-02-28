@@ -60,7 +60,7 @@ class froopTests: XCTestCase {
     }
     
     func testOf() {
-        let of = Stream.of(value: 42)
+        let of = FStream.of(value: 42)
         let c1 = of.collect();
         let c2 = of.collect();
         XCTAssertEqual(c1.take(), [42])

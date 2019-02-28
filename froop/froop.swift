@@ -24,7 +24,7 @@ import Foundation
 /// For some detailed notes on how a combinator is structured for ARC and thread
 /// safety, see the source code for the `.map()` function. All operations follow
 ///  a similar pattern.
-public class Stream<T> {
+public class FStream<T> {
     fileprivate let inner: Locker<Inner<T>>
     fileprivate var parent: Peg? = nil
     
@@ -51,8 +51,8 @@ public class Stream<T> {
     }
     
     /// Create a stream that never emits anything. It stays inerts forever.
-    static func never() -> Stream<T> {
-        let stream = Stream(memoryMode: .NoMemory)
+    static func never() -> FStream<T> {
+        let stream = FStream(memoryMode: .NoMemory)
         stream.inner.withValue() { $0.update(nil) }
         return stream
     }
@@ -89,8 +89,8 @@ public class Stream<T> {
     
     /// Dedupe the stream by extracting some equatable value from it.
     /// The value is compared for consecutive elements.
-    public func dedupeBy<U: Equatable>(_ f: @escaping (T) -> U) -> Stream<T> {
-        let stream = Stream(memoryMode: .NoMemory)
+    public func dedupeBy<U: Equatable>(_ f: @escaping (T) -> U) -> FStream<T> {
+        let stream = FStream(memoryMode: .NoMemory)
         let inner = stream.inner
         var lastU: U? = nil
         stream.parent = self.subscribeInner() {
@@ -108,7 +108,7 @@ public class Stream<T> {
     }
     
     /// Drop a fixed number of initial values, then start emitting.
-    public func drop(amount: UInt) -> Stream<T> {
+    public func drop(amount: UInt) -> FStream<T> {
         var todo = amount + 1
         return self.dropWhile() { _ in
             if todo > 0 {
@@ -120,8 +120,8 @@ public class Stream<T> {
     
     /// Drop values while some condition holds true, then start emitting.
     /// Once started emitting, it will never drop again.
-    public func dropWhile(_ f: @escaping (T) -> Bool) -> Stream<T> {
-        let stream = Stream(memoryMode: .NoMemory)
+    public func dropWhile(_ f: @escaping (T) -> Bool) -> FStream<T> {
+        let stream = FStream(memoryMode: .NoMemory)
         let inner = stream.inner
         var dropping = true
         stream.parent = self.subscribeInner() {
@@ -140,8 +140,8 @@ public class Stream<T> {
     }
     
     /// Make a stream that ends when some other stream ends.
-    public func endWhen<U>(other: Stream<U>) -> Stream<T> {
-        let stream = Stream(memoryMode: .NoMemory)
+    public func endWhen<U>(other: FStream<U>) -> FStream<T> {
+        let stream = FStream(memoryMode: .NoMemory)
         let inner = stream.inner
         let p1 = self.subscribeInner() { t in
             // regular values or end, both are propagated
@@ -159,8 +159,8 @@ public class Stream<T> {
     }
     
     /// Filter the stream using some sort of test.
-    public func filter(_ f: @escaping (T) -> Bool) -> Stream<T> {
-        let stream = Stream(memoryMode: .NoMemory)
+    public func filter(_ f: @escaping (T) -> Bool) -> FStream<T> {
+        let stream = FStream(memoryMode: .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() {
             if let t = $0 {
@@ -216,8 +216,8 @@ public class Stream<T> {
     }
     
     /// Makes a stream that only emits the last value.
-    public func last() -> Stream<T> {
-        let stream = Stream(memoryMode: .NoMemory)
+    public func last() -> FStream<T> {
+        let stream = FStream(memoryMode: .NoMemory)
         let inner = stream.inner
         var lastValue: T? = nil
         stream.parent = self.subscribeInner() {
@@ -236,8 +236,8 @@ public class Stream<T> {
     }
     
     /// Transform values of type T to type U.
-    public func map<U>(_ f: @escaping (T) -> U) -> Stream<U> {
-        // We want to add a listener to `self` and create a new `Stream` instance
+    public func map<U>(_ f: @escaping (T) -> U) -> FStream<U> {
+        // We want to add a listener to `self` and create a new `FStream` instance
         // that receives updates from that listener and apply the transform
         // `f` to incoming values.
         //
@@ -246,8 +246,8 @@ public class Stream<T> {
         //
         // Consider a stream of streams:
         // ```
-        //   let s: Stream<Stream<Int>> = ...
-        //   let x: Stream<Int> = s.map() { innerStream ->
+        //   let s: FStream<FStream<Int>> = ...
+        //   let x: FStream<Int> = s.map() { innerStream ->
         //      innerStream.map() { $0 + 1 }
         //   }
         //   .flatten()
@@ -261,7 +261,7 @@ public class Stream<T> {
         // and returns a `Peg` that is an opaque wrapper for the strong reference to
         // the listener. That "peg" then lives inside the new stream instance and thus
         // when they drop together, we automatically "unsubscribe" the weak listener.
-        let stream = Stream<U>(memoryMode: .NoMemory)
+        let stream = FStream<U>(memoryMode: .NoMemory)
         
         // We can't use "stream" inside the closure since that would capture the stream instance
         // and thus also the "peg" described above (we would get a cyclic dependency keeping the
@@ -281,8 +281,8 @@ public class Stream<T> {
     }
     
     /// Transform any incoming value to one fixed value.
-    public func mapTo<U>(value: U) -> Stream<U> {
-        let stream = Stream<U>(memoryMode: .NoMemory)
+    public func mapTo<U>(value: U) -> FStream<U> {
+        let stream = FStream<U>(memoryMode: .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() {
             if $0 != nil {
@@ -312,8 +312,8 @@ public class Stream<T> {
     /// Useful when wanting to filter/gate one stream on a value from some other stream.
     ///
     /// No value will be emitted unless `other` has produced at least one value.
-    public func sampleCombine<U>(_ other: Stream<U>) -> Stream<(T, U)> {
-        let stream = Stream<(T, U)>(memoryMode: .NoMemory)
+    public func sampleCombine<U>(_ other: FStream<U>) -> FStream<(T, U)> {
+        let stream = FStream<(T, U)>(memoryMode: .NoMemory)
         let inner = stream.inner
         
         // keep track of last U. if this stream ends, we just hold on to the
@@ -354,7 +354,7 @@ public class Stream<T> {
     }
     
     /// Take a fixed amount of elements, then end.
-    public func take(amount: UInt) -> Stream<T> {
+    public func take(amount: UInt) -> FStream<T> {
         var todo = amount + 1
         return takeWhile() { _ in
             if todo > 0 {
@@ -365,8 +365,8 @@ public class Stream<T> {
     }
     
     /// Take values from the stream while some condition hold true, then end the stream.
-    public func takeWhile(_ f: @escaping (T) -> Bool) -> Stream<T> {
-        let stream = Stream<T>(memoryMode: .NoMemory)
+    public func takeWhile(_ f: @escaping (T) -> Bool) -> FStream<T> {
+        let stream = FStream<T>(memoryMode: .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() {
             if let t = $0 {
@@ -400,10 +400,10 @@ public class Stream<T> {
     
 }
 
-extension Stream where T: Equatable {
+extension FStream where T: Equatable {
     
     /// Dedupe the stream by the value in the stream itself
-    public func dedupe() -> Stream<T> {
+    public func dedupe() -> FStream<T> {
         func f(t: T) -> T { return t }
         return self.dedupeBy(f)
     }
@@ -415,8 +415,8 @@ extension Stream where T: Equatable {
 /// the latest stream.
 ///
 /// Swift doesn't do recursive types, so we can't make an extension for this.
-public func flatten<T>(nested: froop.Stream<froop.Stream<T>>) -> Stream<T> {
-    let stream = Stream<T>(memoryMode: .NoMemory)
+public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
+    let stream = FStream<T>(memoryMode: .NoMemory)
     let inner = stream.inner
     var peg: Peg? = nil
     ignore(peg)
@@ -445,8 +445,8 @@ public func flatten<T>(nested: froop.Stream<froop.Stream<T>>) -> Stream<T> {
 /// coming.
 ///
 /// Swift doesn't do recursive types, so we can't make an extension for this.
-public func flattenConcurrently<T>(nested: froop.Stream<froop.Stream<T>>) -> Stream<T> {
-    let stream = Stream<T>(memoryMode: .NoMemory)
+public func flattenConcurrently<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
+    let stream = FStream<T>(memoryMode: .NoMemory)
     let inner = stream.inner
     stream.parent = nested.subscribeInner() {
         if let innerStream = $0 {
@@ -470,8 +470,8 @@ public func flattenConcurrently<T>(nested: froop.Stream<froop.Stream<T>>) -> Str
 }
 
 /// Merge a bunch of streams emitting the same T to one.
-public func merge<T>(_ streams: Stream<T>...) -> Stream<T> {
-    let stream = Stream<T>(memoryMode: .NoMemory)
+public func merge<T>(_ streams: FStream<T>...) -> FStream<T> {
+    let stream = FStream<T>(memoryMode: .NoMemory)
     let inner = stream.inner
     // TODO a better strategy would be to unsubscribe from streams as they end
     var count = streams.count
@@ -491,9 +491,9 @@ public func merge<T>(_ streams: Stream<T>...) -> Stream<T> {
     return stream
 }
 
-/// Specialization of Stream that has "memory". Memory means that any
+/// Specialization of FStream that has "memory". Memory means that any
 /// new listener added will straight away get the last value that went through the stream.
-public class MemoryStream<T> : Stream<T> {
+public class MemoryStream<T> : FStream<T> {
     // The actual implementation of this is entirely in the `Inner` class.
     // We just inherit to make a clearer type to the user of this API.
     
@@ -524,8 +524,8 @@ public class Sink<T> {
     
     /// Get a stream from this sink. Can be used multiple times and each instance
     /// will be backed by the same sink.
-    public func stream() -> Stream<T> {
-        return Stream(inner: self.inner)
+    public func stream() -> FStream<T> {
+        return FStream(inner: self.inner)
     }
     
     /// Update a value into the sink and all connected streams.
@@ -593,7 +593,7 @@ fileprivate struct CollectorInner<T> {
 }
 
 
-/// Subscriptions are receipts to the `Stream.subscribe()` operation. They
+/// Subscriptions are receipts to the `FStream.subscribe()` operation. They
 /// can be used to unsubscribe.
 ///
 /// ```
@@ -629,9 +629,9 @@ public class Subscription<T> {
 /// let imitator = Imitator<Int>() stream of int
 ///
 /// let x = imitator.stream().map() { $0 + 1 } // use imitator stream
-/// let y: Stream<Int> = ...
+/// let y: FStream<Int> = ...
 ///
-/// let m = Stream.merge(x, y) // merge imiator with other stream
+/// let m = FStream.merge(x, y) // merge imiator with other stream
 ///
 /// imitator.imitate(m) // cycle all m up to imitator, this can only be done once
 ///
@@ -646,13 +646,13 @@ public class Imitator<T> {
     
     /// Get a stream from this imitator. Can be used multiple times and each instance
     /// will be backed by the same imitator.
-    public func stream() -> Stream<T> {
-        return Stream(inner: self.inner)
+    public func stream() -> FStream<T> {
+        return FStream(inner: self.inner)
     }
     
     /// Start imitating another stream. This can be called exactly once.
     /// Repeated calls will `fatalError`.
-    public func imitate(other: Stream<T>) {
+    public func imitate(other: FStream<T>) {
         if self.imitating {
             fatalError("imitate() used twice on the same imitator")
         }
@@ -706,7 +706,7 @@ enum MemoryMode {
 
 
 
-/// The inner type in a Stream that is protected via a Locker
+/// The inner type in a FStream that is protected via a Locker
 fileprivate class Inner<T> {
     var alive = true
     var ws: [Weak<Listener<T>>] = []
@@ -905,8 +905,8 @@ func ignore<T>(_ _x: T) {}
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B>(_ a: Stream<A>, _ b: Stream<B>) -> Stream<(A, B)> {
-    let stream = Stream<(A, B)>(memoryMode: .NoMemory)
+public func combine<A, B>(_ a: FStream<A>, _ b: FStream<B>) -> FStream<(A, B)> {
+    let stream = FStream<(A, B)>(memoryMode: .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
@@ -950,8 +950,8 @@ public func combine<A, B>(_ a: Stream<A>, _ b: Stream<B>) -> Stream<(A, B)> {
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B, C>(_ a: Stream<A>, _ b: Stream<B>, _ c: Stream<C>) -> Stream<(A, B, C)> {
-    let stream = Stream<(A, B, C)>(memoryMode: .NoMemory)
+public func combine<A, B, C>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>) -> FStream<(A, B, C)> {
+    let stream = FStream<(A, B, C)>(memoryMode: .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
@@ -1009,8 +1009,8 @@ public func combine<A, B, C>(_ a: Stream<A>, _ b: Stream<B>, _ c: Stream<C>) -> 
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B, C, D>(_ a: Stream<A>, _ b: Stream<B>, _ c: Stream<C>, _ d: Stream<D>) -> Stream<(A, B, C, D)> {
-    let stream = Stream<(A, B, C, D)>(memoryMode: .NoMemory)
+public func combine<A, B, C, D>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>) -> FStream<(A, B, C, D)> {
+    let stream = FStream<(A, B, C, D)>(memoryMode: .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
@@ -1082,8 +1082,8 @@ public func combine<A, B, C, D>(_ a: Stream<A>, _ b: Stream<B>, _ c: Stream<C>, 
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B, C, D, E>(_ a: Stream<A>, _ b: Stream<B>, _ c: Stream<C>, _ d: Stream<D>, _ e: Stream<E>) -> Stream<(A, B, C, D, E)> {
-    let stream = Stream<(A, B, C, D, E)>(memoryMode: .NoMemory)
+public func combine<A, B, C, D, E>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>, _ e: FStream<E>) -> FStream<(A, B, C, D, E)> {
+    let stream = FStream<(A, B, C, D, E)>(memoryMode: .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
