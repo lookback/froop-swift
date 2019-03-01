@@ -643,7 +643,10 @@ public class FImitator<T> {
     fileprivate var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory))
     private var imitating = false
     fileprivate var parent: Peg?
-    
+
+    public init() {
+    }
+
     /// Get a stream from this imitator. Can be used multiple times and each instance
     /// will be backed by the same imitator.
     public func stream() -> FStream<T> {
