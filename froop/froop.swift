@@ -174,6 +174,23 @@ public class FStream<T> {
         }
         return stream
     }
+
+    /// Filter the stream and also transform the value.
+    public func filterMap<U>(_ f: @escaping (T) -> U?) -> FStream<U> {
+        let stream = FStream<U>(memoryMode: .NoMemory)
+        let inner = stream.inner
+        stream.parent = self.subscribeInner() {
+            if let t = $0 {
+                let u = f(t)
+                if u != nil {
+                    inner.withValue() { $0.update(u) }
+                }
+            } else {
+                inner.withValue() { $0.update(nil) }
+            }
+        }
+        return stream
+    }
     
     /// Fold the stream by combining values from the past with the new value.
     /// The seed is emitted as the first value.
