@@ -41,7 +41,7 @@ public class FStream<T> {
     /// Create a new stream that emits one single value to any subscriber.
     ///
     /// The stream is in memory mode.
-    static func of(value: T) -> MemoryStream<T> {
+    public static func of(value: T) -> MemoryStream<T> {
         let stream = MemoryStream<T>(memoryMode: MemoryMode.AfterEnd)
         stream.inner.withValue() {
             $0.update(value)
@@ -59,6 +59,7 @@ public class FStream<T> {
     
     /// Subscribe to values from this stream. Nil indicates the end of
     /// the stream and no more values to come.
+    @discardableResult
     public func subscribe(_ listener: @escaping (T?) -> Void ) -> Subscription<T> {
         return self.inner.withValue() {
             let strong = $0.subscribeStrong(onvalue: listener)
