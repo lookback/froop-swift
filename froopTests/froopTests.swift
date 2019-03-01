@@ -98,7 +98,21 @@ class froopTests: XCTestCase {
         
         XCTAssertEqual(collect.wait(), [0, 2])
     }
-    
+
+    func testFilterMap() {
+        let sink = FSink<Int>()
+
+        let filt = sink.stream().filterMap() { $0 % 2 == 0 ? "\($0)" : nil }
+        let collect = filt.collect()
+
+        sink.update(0)
+        sink.update(1)
+        sink.update(2)
+        sink.end()
+
+        XCTAssertEqual(collect.wait(), ["0", "2"])
+    }
+
     func testImitate() {
         let imitator = FImitator<Int>()
         let collect = imitator.stream().collect();
