@@ -72,9 +72,7 @@ class froopTests: XCTestCase {
 
         var r: [Int] = []
         let sub = sink.stream().subscribe() {
-            if let t = $0 {
-                r.append(t)
-            }
+            r.append($0)
         }
         
         sink.update(0)
@@ -84,7 +82,23 @@ class froopTests: XCTestCase {
         
         XCTAssertEqual(r, [0, 1])
     }
-    
+
+    func testSubscribeEnd() {
+        let sink = FSink<Int>()
+
+        var r: [Int] = []
+        sink.stream().subscribeEnd() {
+            r.append(42)
+        }
+
+        sink.update(0)
+        sink.update(1)
+        sink.update(2)
+        sink.end()
+
+        XCTAssertEqual(r, [42])
+    }
+
     func testFilter() {
         let sink = FSink<Int>()
         

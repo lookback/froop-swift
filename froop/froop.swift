@@ -57,16 +57,32 @@ public class FStream<T> {
         return stream
     }
     
-    /// Subscribe to values from this stream. Nil indicates the end of
-    /// the stream and no more values to come.
+    /// Subscribe to values from this stream.
     @discardableResult
-    public func subscribe(_ listener: @escaping (T?) -> Void ) -> Subscription<T> {
+    public func subscribe(_ listener: @escaping (T) -> Void ) -> Subscription<T> {
         return self.inner.withValue() {
-            let strong = $0.subscribeStrong(onvalue: listener)
+            let strong = $0.subscribeStrong() {
+                if let t = $0 {
+                    listener(t)
+                }
+            }
             return Subscription(strong)
         }
     }
-    
+
+    /// Subscribe to the end of the stream
+    @discardableResult
+    public func subscribeEnd(_ listener: @escaping () -> Void ) -> Subscription<T> {
+        return self.inner.withValue() {
+            let strong = $0.subscribeStrong() {
+                if $0 == nil {
+                    listener()
+                }
+            }
+            return Subscription(strong)
+        }
+    }
+
     /// Internal subscribe that returns a `Peg` which is used to keep
     /// a weak reference alive of a listener to the parent stream.
     fileprivate func subscribeInner(_ listener: @escaping (T?) -> Void ) -> Peg {
