@@ -8,10 +8,10 @@
 import Foundation
 
 
-/// Stream of vaules over time. Typically created by a Sink.
+/// Stream of vaules over time. Typically created by a FSink.
 ///
 /// ```
-/// let sink = Sink<Int>()
+/// let sink = FSink<Int>()
 ///
 /// let stream = sink.stream()
 /// let double = stream.map() { $0 * 2 }
@@ -51,7 +51,7 @@ public class FStream<T> {
     }
     
     /// Create a stream that never emits anything. It stays inerts forever.
-    static func never() -> FStream<T> {
+    public static func never() -> FStream<T> {
         let stream = FStream(memoryMode: .NoMemory)
         stream.inner.withValue() { $0.update(nil) }
         return stream
@@ -198,7 +198,7 @@ public class FStream<T> {
     }
     
     /// Internal function that starts an imitator.
-    fileprivate func imitate(_ imitator: Imitator<T>) {
+    fileprivate func imitate(_ imitator: FImitator<T>) {
         let inner = imitator.inner;
         // peg the imitated stream
         imitator.parent = self.subscribeInner() { t in
@@ -506,7 +506,7 @@ public class MemoryStream<T> : FStream<T> {
 /// The originator of a stream of values.
 ///
 /// ```
-/// let sink = Sink<Int>()
+/// let sink = FSink<Int>()
 ///
 /// let stream = sink.stream()
 ///
@@ -515,7 +515,7 @@ public class MemoryStream<T> : FStream<T> {
 /// sink.update(1)
 /// sink.end()
 /// ```
-public class Sink<T> {
+public class FSink<T> {
     private var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory))
     
     /// Create a new sink.
@@ -597,7 +597,7 @@ fileprivate struct CollectorInner<T> {
 /// can be used to unsubscribe.
 ///
 /// ```
-/// let sink = Sink<Int>()
+/// let sink = FSink<Int>()
 ///
 /// let sub = sink.stream().subscribe() { print("\($0)") }
 ///
@@ -626,7 +626,7 @@ public class Subscription<T> {
 ///
 /// Here's a bad idea illustrating the usage:
 /// ```
-/// let imitator = Imitator<Int>() stream of int
+/// let imitator = FImitator<Int>() stream of int
 ///
 /// let x = imitator.stream().map() { $0 + 1 } // use imitator stream
 /// let y: FStream<Int> = ...
@@ -635,11 +635,11 @@ public class Subscription<T> {
 ///
 /// imitator.imitate(m) // cycle all m up to imitator, this can only be done once
 ///
-/// // NB. This is a BAD IDEA, beacuse it causes an endless loop. Imitators must
+/// // NB. This is a BAD IDEA, beacuse it causes an endless loop. FImitators must
 /// // be used with care to not spin out of control.
 /// ```
 ///
-public class Imitator<T> {
+public class FImitator<T> {
     fileprivate var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory))
     private var imitating = false
     fileprivate var parent: Peg?
