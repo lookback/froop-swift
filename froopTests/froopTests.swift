@@ -346,7 +346,15 @@ class froopTests: XCTestCase {
         
         XCTAssertEqual(collect.wait(), [42, 0, 1])
     }
-    
+
+    func testStartWithOf() {
+
+        let stream = FStream.of(value: 43)
+        let collect = stream.startWith(value: 42).collect()
+
+        XCTAssertEqual(collect.take(), [43])
+    }
+
     func testTake() {
         let sink = FSink<Int>()
 
