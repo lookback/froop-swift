@@ -390,12 +390,20 @@ public class FStream<T> {
     /// Take a fixed amount of elements, then end.
     public func take(amount: UInt) -> FStream<T> {
         var todo = amount + 1
-        return takeWhile() { _ in
+        let stream = FStream<T>(memoryMode: .NoMemory)
+        let inner = stream.inner
+        stream.parent = self.subscribeInner() { t in
             if todo > 0 {
                 todo -= 1
             }
-            return todo > 0
+            if todo > 0 {
+                inner.withValue() { $0.update(t) }
+            }
+            if todo == 1 {
+                inner.withValue() { $0.update(nil) }
+            }
         }
+        return stream
     }
     
     /// Take values from the stream while some condition hold true, then end the stream.

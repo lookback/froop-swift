@@ -368,6 +368,18 @@ class froopTests: XCTestCase {
         XCTAssertEqual(collect.wait(), [0, 1])
     }
 
+    func testTakeExact() {
+        let sink = FSink<Int>()
+
+        let taken = sink.stream().take(amount: 2)
+        let collect = taken.collect()
+
+        sink.update(0)
+        sink.update(1)
+
+        XCTAssertEqual(collect.wait(), [0, 1])
+    }
+
     func testTakeWhile() {
         let sink = FSink<Int>()
         
