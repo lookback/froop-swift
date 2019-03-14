@@ -697,19 +697,26 @@ public class FImitator<T> {
     
     /// Start imitating another stream. This can be called exactly once.
     /// Repeated calls will `fatalError`.
-    public func imitate(other: FStream<T>) {
+    ///
+    /// Imitators create a cyclic dependency. The imitator will end if the
+    /// imitated stream ends, but if we want to break the cycle without
+    /// ending streams, the returned subscription is used.
+    @discardableResult
+    public func imitate(other: FStream<T>) -> Subscription<T> {
         if self.imitating {
             fatalError("imitate() used twice on the same imitator")
         }
         self.imitating = true
-        other.imitate(self)
+        return other.attachImitator(self)
     }
 }
 
 
 /// Thread local collector of imitations that are to be done once the current stream
 /// invocation finishes. This is how we make sync imitations happen.
-let imitations: ThreadLocal<[Imitation]> = ThreadLocal(value: [])
+///
+/// Amazingly ThreadLocal is not thread safe, so we are forced to wrap it in a locker.
+private let imitations: Locker<ThreadLocal<[Imitation]>> = Locker(value: ThreadLocal(value: []))
 typealias Imitation = () -> Void
 
 
@@ -811,18 +818,22 @@ fileprivate class Inner<T> {
         // sync with the same update. keep doing this until there are no more
         // imitators added.
         while true {
-            var again = true
+            var todo: [Imitation] = []
+            // this is inside a lock, we must get the value out and release
+            // the lock since the imitator run might need the lock to add
+            // more imitators (i.e. avoid deadlock).
             imitations.withValue() {
-                let todo = $0
-                if todo.isEmpty {
-                    again = false
-                    return
+                $0.withValue() {
+                    todo = $0
+                    $0 = []
                 }
-                $0 = []
-                todo.forEach() { $0() }
             }
-            if !again {
+            if todo.isEmpty {
+                // nothing to do
                 break
+            } else {
+                // run all imitators
+                todo.forEach() { $0() }
             }
         }
     }
