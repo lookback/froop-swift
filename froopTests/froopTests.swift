@@ -59,14 +59,30 @@ class froopTests: XCTestCase {
         XCTAssertEqual(collect.wait(), [0, 1, 2])
     }
     
-    func testOf() {
-        let of = FStream.of(value: 42)
-        let c1 = of.collect();
-        let c2 = of.collect();
-        XCTAssertEqual(c1.take(), [42])
-        XCTAssertEqual(c2.take(), [42])
-    }
-    
+    //    func testOf() {
+    //        let of = FStream.of(value: 42)
+    //        let c1 = of.collect();
+    //        let c2 = of.collect();
+    //        XCTAssertEqual(c1.take(), [42])
+    //        XCTAssertEqual(c2.take(), [42])
+    //    }
+
+    //    func testStartWithOf() {
+    //
+    //        let stream = FStream.of(value: 43)
+    //        let collect = stream.startWith(value: 42).collect()
+    //
+    //        XCTAssertEqual(collect.take(), [43])
+    //    }
+
+    //    func testMapMemory() {
+    //        let i = FStream.of(value: 42)
+    //            .mapTo(value: "Yo")
+    //            .remember()
+    //        let collect = i.take(amount: 1).collect()
+    //        XCTAssertEqual(collect.wait(), ["Yo"])
+    //    }
+
     func testSubscription() {
         let sink = FSink<Int>()
 
@@ -81,6 +97,31 @@ class froopTests: XCTestCase {
         sink.update(2)
         
         XCTAssertEqual(r, [0, 1])
+    }
+
+    func testSubscribeLink() {
+        // this way we get a scope that deallocates
+        // arcs at the end of it. the chain should
+        // survive it.
+        func makeLinked(_ waitFor: DispatchSemaphore) -> FSink<Int> {
+            let sink = FSink<Int>()
+
+            sink.stream()
+                .map() { $0 * 2 } // there's a risk this intermediary drops
+                .subscribe() { _ in // this subscribe adds a strong listener, chain should live
+                    waitFor.signal()
+                }
+
+            return sink
+        }
+
+        let waitFor = DispatchSemaphore(value: 0)
+        let sink = makeLinked(waitFor)
+
+        sink.update(1)
+
+        // if the chain dropped, this will just stall
+        waitFor.wait()
     }
 
     func testSubscribeEnd() {
@@ -145,7 +186,35 @@ class froopTests: XCTestCase {
         
         XCTAssertEqual(collect.wait(), [2])
     }
-    
+
+    func testImitateDealloc() {
+        // this way we get a scope that deallocates
+        // arcs at the end of it. the chain should
+        // survive it.
+        func makeLinked() -> (FSink<Int>, Collector<Int>) {
+            let imitator = FImitator<Int>()
+            let sink = FSink<Int>()
+
+            let trans = imitator.stream().map() { $0 + 40 }
+
+            let mer = merge(trans.take(amount: 1), sink.stream())
+
+            imitator.imitate(other: sink.stream())
+
+            let collect = mer.collect()
+
+            return (sink, collect)
+        }
+
+
+        let (sink, collect) = makeLinked()
+
+        sink.update(2)
+        sink.end()
+
+        XCTAssertEqual(collect.take(), [2, 42])
+    }
+
     func testDedupe() {
         let sink = FSink<Int>()
         
@@ -347,14 +416,6 @@ class froopTests: XCTestCase {
         XCTAssertEqual(collect.wait(), [42, 0, 1])
     }
 
-    func testStartWithOf() {
-
-        let stream = FStream.of(value: 43)
-        let collect = stream.startWith(value: 42).collect()
-
-        XCTAssertEqual(collect.take(), [43])
-    }
-
     func testTake() {
         let sink = FSink<Int>()
 
@@ -495,4 +556,5 @@ class froopTests: XCTestCase {
         XCTAssertEqual(r.map() {$0.0}, [0, 1, 1])
         XCTAssertEqual(r.map() {$0.1}, ["0", "0", "1"])
     }
+
 }

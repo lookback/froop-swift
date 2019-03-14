@@ -37,19 +37,22 @@ public class FStream<T> {
     fileprivate init(inner: Locker<Inner<T>>) {
         self.inner = inner
     }
-    
-    /// Create a new stream that emits one single value to any subscriber.
-    ///
-    /// The stream is in memory mode.
-    public static func of(value: T) -> MemoryStream<T> {
-        let stream = MemoryStream<T>(memoryMode: MemoryMode.AfterEnd)
-        stream.inner.withValue() {
-            $0.update(value)
-            $0.update(nil)
-        }
-        return stream
-    }
-    
+
+    // TODO: Not sure this function makes much sense since it injects the
+    // value _straight away_. It encourages dependening on that behavior of
+    // making values flow already at initialisation.
+    //    /// Create a new stream that emits one single value to any subscriber.
+    //    ///
+    //    /// The stream is in memory mode.
+    //    public static func of(value: T) -> MemoryStream<T> {
+    //        let stream = MemoryStream<T>(memoryMode: MemoryMode.AfterEnd)
+    //        stream.inner.withValue() {
+    //            $0.update(value)
+    //            $0.update(nil)
+    //        }
+    //        return stream
+    //    }
+
     /// Create a stream that never emits anything. It stays inerts forever.
     public static func never() -> FStream<T> {
         let stream = FStream(memoryMode: .NoMemory)
@@ -61,7 +64,7 @@ public class FStream<T> {
     @discardableResult
     public func subscribe(_ listener: @escaping (T) -> Void ) -> Subscription<T> {
         return self.inner.withValue() {
-            let strong = $0.subscribeStrong() {
+            let strong = $0.subscribeStrong(peg: self.parent) {
                 if let t = $0 {
                     listener(t)
                 }
@@ -74,7 +77,7 @@ public class FStream<T> {
     @discardableResult
     public func subscribeEnd(_ listener: @escaping () -> Void ) -> Subscription<T> {
         return self.inner.withValue() {
-            let strong = $0.subscribeStrong() {
+            let strong = $0.subscribeStrong(peg: self.parent) {
                 if $0 == nil {
                     listener()
                 }
@@ -232,20 +235,24 @@ public class FStream<T> {
     }
     
     /// Internal function that starts an imitator.
-    fileprivate func imitate(_ imitator: FImitator<T>) {
+    fileprivate func attachImitator(_ imitator: FImitator<T>) -> Subscription<T> {
         let inner = imitator.inner;
-        // peg the imitated stream
-        imitator.parent = self.subscribeInner() { t in
-            // an imitation is a "todo" closure that captures the value to be
-            // dispatched later into the imitator. the todo is added to a
-            // thread local and is called later, after the current evaluation
-            // finishes.
-            let todo: Imitation = {
-                inner.withValue() { $0.update(t) }
+        return self.inner.withValue() {
+            let strong = $0.subscribeStrong(peg: self.parent) { t in
+                // an imitation is a "todo" closure that captures the value to be
+                // dispatched later into the imitator. the todo is added to a
+                // thread local and is called later, after the current evaluation
+                // finishes.
+                let todo: Imitation = {
+                    inner.withValue() { $0.update(t) }
+                }
+                imitations.withValue() {
+                    $0.withValue() {
+                        $0.append(todo)
+                    }
+                }
             }
-            imitations.withValue() {
-                $0.append(todo)
-            }
+            return Subscription(strong)
         }
     }
     
@@ -684,7 +691,6 @@ public class Subscription<T> {
 public class FImitator<T> {
     fileprivate var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory))
     private var imitating = false
-    fileprivate var parent: Peg?
 
     public init() {
     }
@@ -791,7 +797,7 @@ fileprivate class Inner<T> {
     }
     
     /// Strongly subscribe to values passing this instance
-    func subscribeStrong(onvalue: @escaping (T?) -> Void) -> Strong<Listener<T>> {
+    func subscribeStrong(peg: Peg?, onvalue: @escaping (T?) -> Void) -> Strong<Listener<T>> {
         if !alive {
             if self.memoryMode == .AfterEnd {
                 onvalue(self.lastValue)
@@ -801,6 +807,7 @@ fileprivate class Inner<T> {
             return Strong(value: nil)
         }
         let l = Listener(closure: onvalue)
+        l.extra = peg as AnyObject
         let s = Strong(value: l)
         if self.memoryMode.isMemory() && self.lastValue != nil {
             onvalue(self.lastValue)
@@ -887,6 +894,8 @@ fileprivate class Inner<T> {
 /// we can in turn put it inside a `Weak` or `Strong`.
 fileprivate class Listener<T> {
     let closure: (T?) -> Void
+    // if we need to hold a reference to something more :)
+    var extra: AnyObject?
     init(closure: @escaping (T?) -> Void) {
         self.closure = closure
     }
@@ -894,8 +903,6 @@ fileprivate class Listener<T> {
         self.closure(t)
     }
 }
-
-
 
 /// Untyped strong reference to something. We use it to keep strong
 /// references to a `Listener<T>` so that we can weakly subscribe
