@@ -84,14 +84,14 @@ final class Box<Value> {
 /// the thread-local is accessed, either through `inner` or `withValue(_:)`.
 ///
 /// - note: If the initial value isn't known until retrieval, use `DeferredThreadLocal`.
-struct ThreadLocal<Value>: Hashable {
+public struct ThreadLocal<Value>: Hashable {
     
     fileprivate var _def: DeferredThreadLocal<Value>
     
     private var _create: () -> Value
     
     /// The hash value.
-    var hashValue: Int {
+    public var hashValue: Int {
         return _def.hashValue
     }
     
@@ -118,7 +118,7 @@ struct ThreadLocal<Value>: Hashable {
     }
     
     /// Creates an instance that will use `create` to generate an initial value.
-    init(create: @escaping () -> Value) {
+    public init(create: @escaping () -> Value) {
         _create = create
         _def = DeferredThreadLocal()
     }
@@ -131,7 +131,7 @@ struct ThreadLocal<Value>: Hashable {
     }
     
     /// Returns the result of the closure performed on the value of `self`.
-    func withValue<T>(_ body: (inout Value) throws -> T) rethrows -> T {
+    public func withValue<T>(_ body: (inout Value) throws -> T) rethrows -> T {
         return try body(&inner.value)
     }
     
@@ -201,7 +201,7 @@ extension ThreadLocalRetrievable {
 }
 
 /// Returns a Boolean value that indicates whether the two arguments have equal values.
-func ==<T, U>(lhs: ThreadLocal<T>, rhs: ThreadLocal<U>) -> Bool {
+public func ==<T, U>(lhs: ThreadLocal<T>, rhs: ThreadLocal<U>) -> Bool {
     return lhs._def == rhs._def
 }
 
