@@ -49,8 +49,8 @@ public class FStream<T> {
     //    /// Create a new stream that emits one single value to any subscriber.
     //    ///
     //    /// The stream is in memory mode.
-    //    public static func of(value: T) -> MemoryStream<T> {
-    //        let stream = MemoryStream<T>(memoryMode: MemoryMode.AfterEnd)
+    //    public static func of(value: T) -> FMemoryStream<T> {
+    //        let stream = FMemoryStream<T>(memoryMode: MemoryMode.AfterEnd)
     //        stream.inner.withValue() {
     //            $0.update(value)
     //            $0.update(nil)
@@ -228,8 +228,8 @@ public class FStream<T> {
     /// The seed is emitted as the first value.
     ///
     /// This is roughly equivalent of an `Array.reduce()` or `Array.fold()`.
-    public func fold<U>(_ seed: U, _ f: @escaping (U, T) -> U) -> MemoryStream<U> {
-        let stream = MemoryStream<U>(memoryMode: .UntilEnd)
+    public func fold<U>(_ seed: U, _ f: @escaping (U, T) -> U) -> FMemoryStream<U> {
+        let stream = FMemoryStream<U>(memoryMode: .UntilEnd)
         let inner = stream.inner
         // emit seed as first value
         inner.withValue() { $0.update(seed) }
@@ -350,8 +350,8 @@ public class FStream<T> {
     
     /// Make a stream that remembers the last value. Any new (or combinator) will get the
     /// last emitted value straight away.
-    public func remember() -> MemoryStream<T> {
-        let stream = MemoryStream<T>(memoryMode: .UntilEnd)
+    public func remember() -> FMemoryStream<T> {
+        let stream = FMemoryStream<T>(memoryMode: .UntilEnd)
         let inner = stream.inner
         stream.parent = self.subscribeInner() { t in
             inner.withValue() { $0.update(t) }
@@ -397,8 +397,8 @@ public class FStream<T> {
     }
     
     /// Prepend a value to a stream. Or in other words, give a start value to a stream.
-    public func startWith(value: T) -> MemoryStream<T> {
-        let stream = MemoryStream<T>(memoryMode: .UntilEnd)
+    public func startWith(value: T) -> FMemoryStream<T> {
+        let stream = FMemoryStream<T>(memoryMode: .UntilEnd)
         let inner = stream.inner
         inner.withValue() { $0.update(value) }
         stream.parent = self.subscribeInner() { t in
@@ -555,7 +555,7 @@ public func merge<T>(_ streams: FStream<T>...) -> FStream<T> {
 
 /// Specialization of FStream that has "memory". Memory means that any
 /// new listener added will straight away get the last value that went through the stream.
-public class MemoryStream<T> : FStream<T> {
+public class FMemoryStream<T> : FStream<T> {
     // The actual implementation of this is entirely in the `Inner` class.
     // We just inherit to make a clearer type to the user of this API.
     
