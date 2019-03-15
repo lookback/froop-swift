@@ -7,6 +7,11 @@
 //
 import Foundation
 
+/// Global singelton that can redirect the froop logging from .debug()
+public var froopLog: (String, String) -> Void = {
+    label, message in
+    print("\(label) \(message)")
+}
 
 /// Stream of vaules over time. Typically created by a FSink.
 ///
@@ -106,7 +111,15 @@ public class FStream<T> {
         c.parent = self.subscribeInner() { c.update($0) }
         return c
     }
-    
+
+    /// Print every object passing through this stream prefixed by the `label`.
+    public func debug(_ label: String) -> FStream<T> {
+        return self.map() {
+            froopLog(label, String(describing: $0))
+            return $0
+        }
+    }
+
     /// Dedupe the stream by extracting some equatable value from it.
     /// The value is compared for consecutive elements.
     public func dedupeBy<U: Equatable>(_ f: @escaping (T) -> U) -> FStream<T> {
