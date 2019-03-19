@@ -108,7 +108,7 @@ public class FStream<T> {
     /// Collect values of this stream into an array of values.
     public func collect() -> Collector<T> {
         let c = Collector<T>()
-        c.parent = self.subscribeInner() { c.update($0) }
+        c.parent = self.subscribeInner(c.update)
         return c
     }
 

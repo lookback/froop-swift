@@ -87,9 +87,7 @@ class froopTests: XCTestCase {
         let sink = FSink<Int>()
 
         var r: [Int] = []
-        let sub = sink.stream().subscribe() {
-            r.append($0)
-        }
+        let sub = sink.stream().subscribe() { r.append($0) }
         
         sink.update(0)
         sink.update(1)
