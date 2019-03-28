@@ -13,6 +13,8 @@ public var froopLog: (String, String) -> Void = {
     print("\(label) \(message)")
 }
 
+private var streamCount: Locker<UInt64> = Locker(value: 0)
+
 /// Stream of vaules over time. Typically created by a FSink.
 ///
 /// ```
@@ -29,10 +31,18 @@ public var froopLog: (String, String) -> Void = {
 /// For some detailed notes on how a combinator is structured for ARC and thread
 /// safety, see the source code for the `.map()` function. All operations follow
 ///  a similar pattern.
-public class FStream<T> {
+public class FStream<T>: Equatable {
     fileprivate let inner: Locker<Inner<T>>
     fileprivate var parent: Peg? = nil
-    
+    fileprivate let ident: UInt64 = streamCount.withValue() {
+        $0 += 1
+        return $0
+    }
+
+    public static func == (lhs: FStream, rhs: FStream) -> Bool {
+        return lhs.ident == rhs.ident
+    }
+
     /// A new stream with a new inner
     fileprivate init(memoryMode: MemoryMode) {
         self.inner = Locker(value:Inner(memoryMode))
@@ -480,21 +490,26 @@ extension FStream where T: Equatable {
 public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
     let stream = FStream<T>(memoryMode: .NoMemory)
     let inner = stream.inner
+    var currentIdent: UInt64 = 0
     var peg: Peg? = nil
     ignore(peg)
     stream.parent = nested.subscribeInner() {
-        if let innerStream = $0 {
-            // simply overwriting the old value will release the ARC
-            peg = innerStream.subscribeInner() {
-                if let t = $0 {
-                    inner.withValue() { $0.update(t) }
-                } else {
-                    peg = nil
-                    // the inner stream ending does not end the result stream
+        if let nestedStream = $0 {
+            if currentIdent != nestedStream.ident {
+                // simply overwriting the old value will release the ARC
+                peg = nestedStream.subscribeInner() {
+                    if let t = $0 {
+                        inner.withValue() { $0.update(t) }
+                    } else {
+                        peg = nil
+                        // the inner stream ending does not end the result stream
+                    }
                 }
+                currentIdent = nestedStream.ident
             }
         } else {
             peg = nil
+            currentIdent = 0
             // the outer stream ending does end the result stream
             inner.withValue() { $0.update(nil) }
         }
@@ -509,20 +524,24 @@ public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
 /// Swift doesn't do recursive types, so we can't make an extension for this.
 public func flattenConcurrently<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
     let stream = FStream<T>(memoryMode: .NoMemory)
+    let currentIdents: Locker<[UInt64]> = Locker(value:[])
     let inner = stream.inner
     stream.parent = nested.subscribeInner() {
-        if let innerStream = $0 {
-            var peg: Peg? = nil;
+        if let nestedStream$ = $0 {
+            var peg: Peg? = nil
             ignore(peg)
+            let ident = nestedStream$.ident
             // simply overwriting the old value will release the ARC
-            peg = innerStream.subscribeInner() {
+            peg = nestedStream$.subscribeInner() {
                 if let t = $0 {
                     inner.withValue() { $0.update(t) }
                 } else {
                     // the inner stream ending does not end the result stream
                     peg = nil
+                    currentIdents.withValue() { $0.removeAll() { $0 == ident } }
                 }
             }
+            currentIdents.withValue() { $0.append(ident) }
         } else {
             // the outer stream ending does end the result stream
             inner.withValue() { $0.update(nil) }

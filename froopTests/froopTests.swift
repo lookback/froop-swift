@@ -493,6 +493,49 @@ class froopTests: XCTestCase {
         XCTAssertEqual(collect.wait(), [1, 2, 3])
     }
 
+    func testFlattenSame() {
+        struct Foo {
+            var stream: FStream<Int>
+            var other: Float
+        }
+
+        enum FooUpdate {
+            case stream(FStream<Int>)
+            case other(Float)
+        }
+
+        let sinkInt = FSink<Int>()
+        let sinkUpdate = FSink<FooUpdate>()
+
+        let foo$ = sinkUpdate.stream().fold(Foo(stream: FStream.never(), other: 0.0)) { prev, upd in
+            var next = prev
+            switch upd {
+            case .stream(let stream):
+                next.stream = stream
+            case .other(let other):
+                next.other = other
+            }
+            return next
+        }
+
+        let int$ = flatten(nested: foo$.map() { $0.stream.remember() })
+        sinkUpdate.update(.stream(sinkInt.stream()))
+        let coll = int$.collect()
+
+        sinkInt.update(42)
+
+        // what we don't want to see is [42, 42 ,42] repeated for each update of Foo
+        sinkUpdate.update(.other(1.0))
+        sinkUpdate.update(.other(2.0))
+        sinkUpdate.update(.other(3.0))
+
+        sinkInt.update(43)
+
+        sinkUpdate.end()
+
+        XCTAssertEqual(coll.wait(), [42, 43])
+    }
+
     func testFlattenConcurrently() {
         let sink: FSink<froop.FStream<Int>> = FSink()
         
