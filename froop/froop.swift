@@ -1061,7 +1061,7 @@ public func combine<A, B, C>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>) 
         }
         }
     }
-    var count = 2
+    var count = 3
     let pegs: [Peg] = [
         a.subscribeInner() {
             if let t = $0 {
@@ -1123,7 +1123,7 @@ public func combine<A, B, C, D>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C
         }
         }
     }
-    var count = 2
+    var count = 4
     let pegs: [Peg] = [
         a.subscribeInner() {
             if let t = $0 {
@@ -1199,7 +1199,7 @@ public func combine<A, B, C, D, E>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStrea
         }
         }
     }
-    var count = 2
+    var count = 5
     let pegs: [Peg] = [
         a.subscribeInner() {
             if let t = $0 {

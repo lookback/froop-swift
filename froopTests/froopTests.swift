@@ -598,4 +598,68 @@ class froopTests: XCTestCase {
         XCTAssertEqual(r.map() {$0.1}, ["0", "0", "1"])
     }
 
+    func testCombineNil() {
+        let sink1 = FSink<Int?>()
+        let sink2 = FSink<String?>()
+
+        let comb = froop.combine(sink1.stream(), sink2.stream())
+
+        let collect = comb.collect()
+
+        sink1.update(nil) // nothing happens
+        sink2.update(nil) // first value
+        sink2.update("hi") // first value
+        sink1.end()
+        sink2.end()
+
+        let r: [(Int?, String?)] = collect.wait()
+
+        // swift tuples are not equatable?!
+        XCTAssertEqual(r.map() {$0.0}, [nil, nil])
+        XCTAssertEqual(r.map() {$0.1}, [nil, "hi"])
+    }
+
+    func testCombineFromSame() {
+        let sink1 = FSink<Int>()
+        let stream1 = sink1.stream()
+
+        let stream2 = stream1.map() { "\($0)" }
+
+        let comb = froop.combine(stream1, stream2)
+
+        let collect = comb.collect()
+
+        sink1.update(1) // value from both
+        sink1.end()
+
+        let r: [(Int, String)] = collect.wait()
+
+        // swift tuples are not equatable?!
+        XCTAssertEqual(r.map() {$0.0}, [1])
+        XCTAssertEqual(r.map() {$0.1}, ["1"])
+    }
+
+    func testCombineWithEnding() {
+        let sink1 = FSink<Int>()
+        let sink2 = FSink<Int>()
+        let sink3 = FSink<Int>()
+
+        let comb = froop.combine(sink1.stream(), sink2.stream(), sink3.stream())
+
+        let collect = comb.collect()
+
+        sink1.update(1)
+        sink1.end()
+        sink2.update(2)
+        sink2.end()
+        sink3.update(3)
+        sink3.end()
+
+        let r: [(Int, Int, Int)] = collect.wait()
+
+        // swift tuples are not equatable?!
+        XCTAssertEqual(r.map() {$0.0}, [1])
+        XCTAssertEqual(r.map() {$0.1}, [2])
+        XCTAssertEqual(r.map() {$0.2}, [3])
+    }
 }
