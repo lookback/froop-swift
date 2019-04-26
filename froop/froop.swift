@@ -696,7 +696,7 @@ public class Subscription<T> {
     private var strong: Strong<Listener<T>>?
 
     /// Set to true to automatically unsubscribe when the subscription deinits
-    var unsubscribeOnDeinit: Bool = false
+    public var unsubscribeOnDeinit: Bool = false
     
     fileprivate init(_ strong: Strong<Listener<T>>) {
         self.strong = strong
