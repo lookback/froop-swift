@@ -491,6 +491,7 @@ public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
     let stream = FStream<T>(memoryMode: .NoMemory)
     let inner = stream.inner
     var currentIdent: UInt64 = 0
+    var outerEnded = false
     var peg: Peg? = nil
     ignore(peg)
     stream.parent = nested.subscribeInner() {
@@ -502,16 +503,21 @@ public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
                         inner.withValue() { $0.update(t) }
                     } else {
                         peg = nil
-                        // the inner stream ending does not end the result stream
+                        currentIdent = 0
+                        // the inner stream ending ends if the outer is ended
+                        if outerEnded {
+                            inner.withValue() { $0.update(nil) }
+                        }
                     }
                 }
                 currentIdent = nestedStream.ident
             }
         } else {
-            peg = nil
-            currentIdent = 0
-            // the outer stream ending does end the result stream
-            inner.withValue() { $0.update(nil) }
+            outerEnded = true
+            // the outer stream ending ends if inner is already ended, or not started
+            if peg == nil {
+                inner.withValue() { $0.update(nil) }
+            }
         }
     }
     return stream

@@ -487,10 +487,11 @@ class froopTests: XCTestCase {
         sink1.update(42) // missed
         sink1.end() // does not end outer
         sink2.update(3)
-        sink.end() // does end outer
-        sink2.update(4) // missed
+        sink.end() // doesn't end outer, because sink2 is active
+        sink2.update(4)
+        sink2.end()
         
-        XCTAssertEqual(collect.wait(), [1, 2, 3])
+        XCTAssertEqual(collect.wait(), [1, 2, 3, 4])
     }
 
     func testFlattenSame() {
@@ -532,6 +533,7 @@ class froopTests: XCTestCase {
         sinkInt.update(43)
 
         sinkUpdate.end()
+        sinkInt.end()
 
         XCTAssertEqual(coll.wait(), [42, 43])
     }
