@@ -688,6 +688,9 @@ fileprivate struct CollectorInner<T> {
 /// ```
 public class Subscription<T> {
     private var strong: Strong<Listener<T>>?
+
+    /// Set to true to automatically unsubscribe when the subscription deinits
+    var unsubscribeOnDeinit: Bool = false
     
     fileprivate init(_ strong: Strong<Listener<T>>) {
         self.strong = strong
@@ -697,6 +700,12 @@ public class Subscription<T> {
     public func unsubscribe() {
         self.strong?.clear()
         self.strong = nil
+    }
+
+    deinit {
+        if unsubscribeOnDeinit {
+            self.unsubscribe()
+        }
     }
 }
 
