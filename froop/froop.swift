@@ -709,7 +709,7 @@ public class Subscription<T> {
     }
 
     /// Make subscription such that it stops on deinit.
-    public func unsbubscribeOnDeinit() -> Subscription<T> {
+    public func unsubscribeOnDeinit() -> Subscription<T> {
         self.doUnsubscribeOnDeinit = true
         return self
     }
