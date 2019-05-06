@@ -696,7 +696,7 @@ public class Subscription<T> {
     private var strong: Strong<Listener<T>>?
 
     /// Set to true to automatically unsubscribe when the subscription deinits
-    public var unsubscribeOnDeinit: Bool = false
+    private var doUnsubscribeOnDeinit: Bool = false
     
     fileprivate init(_ strong: Strong<Listener<T>>) {
         self.strong = strong
@@ -708,8 +708,14 @@ public class Subscription<T> {
         self.strong = nil
     }
 
+    /// Make subscription such that it stops on deinit.
+    public func unsbubscribeOnDeinit() -> Subscription<T> {
+        self.doUnsubscribeOnDeinit = true
+        return self
+    }
+
     deinit {
-        if unsubscribeOnDeinit {
+        if doUnsubscribeOnDeinit {
             self.unsubscribe()
         }
     }
