@@ -494,6 +494,32 @@ class froopTests: XCTestCase {
         XCTAssertEqual(collect.wait(), [1, 2, 3, 4])
     }
 
+    func testFlattenMemory() {
+        let sink: FSink<froop.FStream<Int>> = FSink()
+
+        let memory$ = sink.stream().remember()
+
+        let sink1 = FSink<Int>()
+        sink1.update(0) // missed
+        sink.update(sink1.stream())
+
+        let flat = flatten(nested: memory$)
+        let collect = flat.collect()
+
+        // the memory$ first value is dispatched async, and there's no guarantee that
+        // happens before we reach the update() rows below. this second ought to be
+        // enough :)
+        sleep(1)
+
+        sink1.update(1)
+        sink1.update(2)
+
+        sink.end() // doesn't end outer, because sink2 is active
+        sink1.end()
+
+        XCTAssertEqual(collect.wait(), [1, 2])
+    }
+
     func testFlattenSame() {
         struct Foo {
             var stream: FStream<Int>

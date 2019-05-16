@@ -824,6 +824,7 @@ fileprivate class Inner<T> {
     var ss: [Strong<Listener<T>>] = []
     var memoryMode: MemoryMode
     var lastValue: T? = nil
+    var delayedDispatch: DispatchWorkItem? = nil
     
     init(_ memoryMode: MemoryMode) {
         self.memoryMode = memoryMode
@@ -833,9 +834,12 @@ fileprivate class Inner<T> {
     func subscribeWeak(onvalue: @escaping (T?) -> Void) -> Peg {
         if !alive {
             if self.memoryMode == .AfterEnd {
-                onvalue(self.lastValue)
+                let value = self.lastValue
+                delayedDispatch = DispatchWorkItem() { onvalue(value) }
+                DispatchQueue.global().async(execute: delayedDispatch!)
             } else {
-                onvalue(nil)
+                delayedDispatch = DispatchWorkItem() { onvalue(nil) }
+                DispatchQueue.global().async(execute: delayedDispatch!)
             }
             return Peg(l: 0 as AnyObject) // fake peg
         }
@@ -844,7 +848,9 @@ fileprivate class Inner<T> {
         let p = Peg(l: l)
         self.ws.append(w)
         if self.memoryMode.isMemory() && self.lastValue != nil {
-            onvalue(self.lastValue)
+            let value = self.lastValue
+            delayedDispatch = DispatchWorkItem() { onvalue(value) }
+            DispatchQueue.global().async(execute: delayedDispatch!)
         }
         return p
     }
@@ -853,9 +859,12 @@ fileprivate class Inner<T> {
     func subscribeStrong(peg: Peg?, onvalue: @escaping (T?) -> Void) -> Strong<Listener<T>> {
         if !alive {
             if self.memoryMode == .AfterEnd {
-                onvalue(self.lastValue)
+                let value = self.lastValue
+                delayedDispatch = DispatchWorkItem() { onvalue(value) }
+                DispatchQueue.global().async(execute: delayedDispatch!)
             } else {
-                onvalue(nil)
+                delayedDispatch = DispatchWorkItem() { onvalue(nil) }
+                DispatchQueue.global().async(execute: delayedDispatch!)
             }
             return Strong(value: nil)
         }
@@ -863,7 +872,9 @@ fileprivate class Inner<T> {
         l.extra = peg as AnyObject
         let s = Strong(value: l)
         if self.memoryMode.isMemory() && self.lastValue != nil {
-            onvalue(self.lastValue)
+            let value = self.lastValue
+            delayedDispatch = DispatchWorkItem() { onvalue(value) }
+            DispatchQueue.global().async(execute: delayedDispatch!)
         }
         self.ss.append(s)
         return s
@@ -897,13 +908,19 @@ fileprivate class Inner<T> {
             }
         }
     }
-    
+
     /// Update a new value to the stream. `nil` indicates the end of the stream
     func update(_ t: T?) {
         if !alive {
             return
         }
-        
+
+        // if one is scheduled do it before we dispatch the next value
+        if let delayedDispatch = self.delayedDispatch {
+            self.delayedDispatch = nil
+            delayedDispatch.wait()
+        }
+
         // strong subscribers get the value first, only
         // keep listeners that haven't unsubscribed
         self.ss = self.ss.filter() {
