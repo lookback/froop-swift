@@ -256,7 +256,7 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Internal function that starts an imitator.
     fileprivate func attachImitator(_ imitator: FImitator<T>) -> Subscription<T> {
         let inner = imitator.inner;
@@ -487,8 +487,8 @@ extension FStream where T: Equatable {
 /// the latest stream.
 ///
 /// Swift doesn't do recursive types, so we can't make an extension for this.
-public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
-    let stream = FStream<T>(memoryMode: .NoMemory)
+public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FMemoryStream<T> {
+    let stream = FMemoryStream<T>(memoryMode: .UntilEnd)
     let inner = stream.inner
     var currentIdent: UInt64 = 0
     var outerEnded = false
@@ -824,8 +824,7 @@ fileprivate class Inner<T> {
     var ss: [Strong<Listener<T>>] = []
     var memoryMode: MemoryMode
     var lastValue: T? = nil
-    var delayedDispatch: DispatchWorkItem? = nil
-    
+
     init(_ memoryMode: MemoryMode) {
         self.memoryMode = memoryMode
     }
@@ -834,12 +833,9 @@ fileprivate class Inner<T> {
     func subscribeWeak(onvalue: @escaping (T?) -> Void) -> Peg {
         if !alive {
             if self.memoryMode == .AfterEnd {
-                let value = self.lastValue
-                delayedDispatch = DispatchWorkItem() { onvalue(value) }
-                DispatchQueue.global().async(execute: delayedDispatch!)
+                onvalue(self.lastValue)
             } else {
-                delayedDispatch = DispatchWorkItem() { onvalue(nil) }
-                DispatchQueue.global().async(execute: delayedDispatch!)
+                onvalue(nil)
             }
             return Peg(l: 0 as AnyObject) // fake peg
         }
@@ -847,10 +843,8 @@ fileprivate class Inner<T> {
         let w = Weak(value: l)
         let p = Peg(l: l)
         self.ws.append(w)
-        if self.memoryMode.isMemory() && self.lastValue != nil {
-            let value = self.lastValue
-            delayedDispatch = DispatchWorkItem() { onvalue(value) }
-            DispatchQueue.global().async(execute: delayedDispatch!)
+        if self.memoryMode.isMemory(), let value = self.lastValue {
+            onvalue(value)
         }
         return p
     }
@@ -859,22 +853,17 @@ fileprivate class Inner<T> {
     func subscribeStrong(peg: Peg?, onvalue: @escaping (T?) -> Void) -> Strong<Listener<T>> {
         if !alive {
             if self.memoryMode == .AfterEnd {
-                let value = self.lastValue
-                delayedDispatch = DispatchWorkItem() { onvalue(value) }
-                DispatchQueue.global().async(execute: delayedDispatch!)
+                onvalue(self.lastValue)
             } else {
-                delayedDispatch = DispatchWorkItem() { onvalue(nil) }
-                DispatchQueue.global().async(execute: delayedDispatch!)
+                onvalue(nil)
             }
             return Strong(value: nil)
         }
         let l = Listener(closure: onvalue)
         l.extra = peg as AnyObject
         let s = Strong(value: l)
-        if self.memoryMode.isMemory() && self.lastValue != nil {
-            let value = self.lastValue
-            delayedDispatch = DispatchWorkItem() { onvalue(value) }
-            DispatchQueue.global().async(execute: delayedDispatch!)
+        if self.memoryMode.isMemory(), let value = self.lastValue {
+            onvalue(value)
         }
         self.ss.append(s)
         return s
@@ -884,7 +873,7 @@ fileprivate class Inner<T> {
     func updateAndImitate(_ t: T?) {
         // normal update
         self.update(t)
-        
+
         // any imitator that have been gathered during the update is executed now
         // sync with the same update. keep doing this until there are no more
         // imitators added.
@@ -913,12 +902,6 @@ fileprivate class Inner<T> {
     func update(_ t: T?) {
         if !alive {
             return
-        }
-
-        // if one is scheduled do it before we dispatch the next value
-        if let delayedDispatch = self.delayedDispatch {
-            self.delayedDispatch = nil
-            delayedDispatch.wait()
         }
 
         // strong subscribers get the value first, only
