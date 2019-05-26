@@ -230,6 +230,25 @@ class froopTests: XCTestCase {
         XCTAssertEqual(collect.wait(), [0, 1, 2])
     }
     
+    func testDedupeBools() {
+        let sink = FSink<Bool>()
+
+        let deduped = sink.stream().dedupe()
+        let collect = deduped.collect()
+
+        sink.update(false)
+        sink.update(false)
+        sink.update(true)
+        sink.update(true)
+        sink.update(false)
+        sink.update(false)
+        sink.update(true)
+        sink.update(true)
+        sink.end()
+
+        XCTAssertEqual(collect.wait(), [false, true, false, true])
+    }
+
     func testDedupeBy() {
         class Foo {
             let i: Int
