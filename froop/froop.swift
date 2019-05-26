@@ -132,8 +132,8 @@ public class FStream<T>: Equatable {
 
     /// Dedupe the stream by extracting some equatable value from it.
     /// The value is compared for consecutive elements.
-    public func dedupeBy<U: Equatable>(_ f: @escaping (T) -> U) -> FStream<T> {
-        let stream = FStream(memoryMode: .NoMemory)
+    public func dedupeBy<U: Equatable>(memory: Bool = false, _ f: @escaping (T) -> U) -> FStream<T> {
+        let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         var lastU: U? = nil
         stream.parent = self.subscribeInner() {
@@ -151,9 +151,9 @@ public class FStream<T>: Equatable {
     }
     
     /// Drop a fixed number of initial values, then start emitting.
-    public func drop(amount: UInt) -> FStream<T> {
+    public func drop(memory: Bool = false, amount: UInt) -> FStream<T> {
         var todo = amount + 1
-        return self.dropWhile() { _ in
+        return self.dropWhile(memory: memory) { _ in
             if todo > 0 {
                 todo -= 1
             }
@@ -163,8 +163,8 @@ public class FStream<T>: Equatable {
     
     /// Drop values while some condition holds true, then start emitting.
     /// Once started emitting, it will never drop again.
-    public func dropWhile(_ f: @escaping (T) -> Bool) -> FStream<T> {
-        let stream = FStream(memoryMode: .NoMemory)
+    public func dropWhile(memory: Bool = false, _ f: @escaping (T) -> Bool) -> FStream<T> {
+        let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         var dropping = true
         stream.parent = self.subscribeInner() {
@@ -183,8 +183,8 @@ public class FStream<T>: Equatable {
     }
     
     /// Make a stream that ends when some other stream ends.
-    public func endWhen<U>(other: FStream<U>) -> FStream<T> {
-        let stream = FStream(memoryMode: .NoMemory)
+    public func endWhen<U>(memory: Bool = false, other: FStream<U>) -> FStream<T> {
+        let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         let p1 = self.subscribeInner() { t in
             // regular values or end, both are propagated
@@ -202,8 +202,8 @@ public class FStream<T>: Equatable {
     }
     
     /// Filter the stream using some sort of test.
-    public func filter(_ f: @escaping (T) -> Bool) -> FStream<T> {
-        let stream = FStream(memoryMode: .NoMemory)
+    public func filter(memory: Bool = false, _ f: @escaping (T) -> Bool) -> FStream<T> {
+        let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() {
             if let t = $0 {
@@ -218,8 +218,8 @@ public class FStream<T>: Equatable {
     }
 
     /// Filter the stream and also transform the value.
-    public func filterMap<U>(_ f: @escaping (T) -> U?) -> FStream<U> {
-        let stream = FStream<U>(memoryMode: .NoMemory)
+    public func filterMap<U>(memory: Bool = false, _ f: @escaping (T) -> U?) -> FStream<U> {
+        let stream = FStream<U>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() {
             if let t = $0 {
@@ -280,8 +280,8 @@ public class FStream<T>: Equatable {
     }
     
     /// Makes a stream that only emits the last value.
-    public func last() -> FStream<T> {
-        let stream = FStream(memoryMode: .NoMemory)
+    public func last(memory: Bool = false) -> FStream<T> {
+        let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         var lastValue: T? = nil
         stream.parent = self.subscribeInner() {
@@ -300,7 +300,7 @@ public class FStream<T>: Equatable {
     }
     
     /// Transform values of type T to type U.
-    public func map<U>(_ f: @escaping (T) -> U) -> FStream<U> {
+    public func map<U>(memory: Bool = false, _ f: @escaping (T) -> U) -> FStream<U> {
         // We want to add a listener to `self` and create a new `FStream` instance
         // that receives updates from that listener and apply the transform
         // `f` to incoming values.
@@ -325,7 +325,7 @@ public class FStream<T>: Equatable {
         // and returns a `Peg` that is an opaque wrapper for the strong reference to
         // the listener. That "peg" then lives inside the new stream instance and thus
         // when they drop together, we automatically "unsubscribe" the weak listener.
-        let stream = FStream<U>(memoryMode: .NoMemory)
+        let stream = FStream<U>(memoryMode: memory ? .UntilEnd : .NoMemory)
         
         // We can't use "stream" inside the closure since that would capture the stream instance
         // and thus also the "peg" described above (we would get a cyclic dependency keeping the
@@ -345,8 +345,8 @@ public class FStream<T>: Equatable {
     }
     
     /// Transform any incoming value to one fixed value.
-    public func mapTo<U>(value: U) -> FStream<U> {
-        let stream = FStream<U>(memoryMode: .NoMemory)
+    public func mapTo<U>(memory: Bool = false, value: U) -> FStream<U> {
+        let stream = FStream<U>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() {
             if $0 != nil {
@@ -376,8 +376,8 @@ public class FStream<T>: Equatable {
     /// Useful when wanting to filter/gate one stream on a value from some other stream.
     ///
     /// No value will be emitted unless `other` has produced at least one value.
-    public func sampleCombine<U>(_ other: FStream<U>) -> FStream<(T, U)> {
-        let stream = FStream<(T, U)>(memoryMode: .NoMemory)
+    public func sampleCombine<U>(memory: Bool = false, _ other: FStream<U>) -> FStream<(T, U)> {
+        let stream = FStream<(T, U)>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         
         // keep track of last U. if this stream ends, we just hold on to the
@@ -418,9 +418,9 @@ public class FStream<T>: Equatable {
     }
     
     /// Take a fixed amount of elements, then end.
-    public func take(amount: UInt) -> FStream<T> {
+    public func take(amount: UInt, memory: Bool = false) -> FStream<T> {
         var todo = amount + 1
-        let stream = FStream<T>(memoryMode: .NoMemory)
+        let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() { t in
             if todo > 0 {
@@ -437,8 +437,8 @@ public class FStream<T>: Equatable {
     }
     
     /// Take values from the stream while some condition hold true, then end the stream.
-    public func takeWhile(_ f: @escaping (T) -> Bool) -> FStream<T> {
-        let stream = FStream<T>(memoryMode: .NoMemory)
+    public func takeWhile(memory: Bool = false, _ f: @escaping (T) -> Bool) -> FStream<T> {
+        let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         stream.parent = self.subscribeInner() {
             if let t = $0 {
@@ -475,9 +475,9 @@ public class FStream<T>: Equatable {
 extension FStream where T: Equatable {
     
     /// Dedupe the stream by the value in the stream itself
-    public func dedupe() -> FStream<T> {
+    public func dedupe(memory: Bool = false) -> FStream<T> {
         func f(t: T) -> T { return t }
-        return self.dedupeBy(f)
+        return self.dedupeBy(memory: memory, f)
     }
     
 }
@@ -487,8 +487,8 @@ extension FStream where T: Equatable {
 /// the latest stream.
 ///
 /// Swift doesn't do recursive types, so we can't make an extension for this.
-public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FMemoryStream<T> {
-    let stream = FMemoryStream<T>(memoryMode: .UntilEnd)
+public func flatten<T>(memory: Bool = false, nested: froop.FStream<froop.FStream<T>>) -> FMemoryStream<T> {
+    let stream = FMemoryStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
     var currentIdent: UInt64 = 0
     var outerEnded = false
@@ -528,8 +528,8 @@ public func flatten<T>(nested: froop.FStream<froop.FStream<T>>) -> FMemoryStream
 /// coming.
 ///
 /// Swift doesn't do recursive types, so we can't make an extension for this.
-public func flattenConcurrently<T>(nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
-    let stream = FStream<T>(memoryMode: .NoMemory)
+public func flattenConcurrently<T>(memory: Bool = false, nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
+    let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let currentIdents: Locker<[UInt64]> = Locker(value:[])
     let inner = stream.inner
     stream.parent = nested.subscribeInner() {
@@ -557,8 +557,8 @@ public func flattenConcurrently<T>(nested: froop.FStream<froop.FStream<T>>) -> F
 }
 
 /// Merge a bunch of streams emitting the same T to one.
-public func merge<T>(_ streams: FStream<T>...) -> FStream<T> {
-    let stream = FStream<T>(memoryMode: .NoMemory)
+public func merge<T>(memory: Bool = false, _ streams: FStream<T>...) -> FStream<T> {
+    let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
     // TODO a better strategy would be to unsubscribe from streams as they end
     var count = streams.count
@@ -1021,8 +1021,8 @@ func ignore<T>(_ _x: T) {}
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B>(_ a: FStream<A>, _ b: FStream<B>) -> FStream<(A, B)> {
-    let stream = FStream<(A, B)>(memoryMode: .NoMemory)
+public func combine<A, B>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>) -> FStream<(A, B)> {
+    let stream = FStream<(A, B)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
@@ -1066,8 +1066,8 @@ public func combine<A, B>(_ a: FStream<A>, _ b: FStream<B>) -> FStream<(A, B)> {
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B, C>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>) -> FStream<(A, B, C)> {
-    let stream = FStream<(A, B, C)>(memoryMode: .NoMemory)
+public func combine<A, B, C>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>) -> FStream<(A, B, C)> {
+    let stream = FStream<(A, B, C)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
@@ -1125,8 +1125,8 @@ public func combine<A, B, C>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>) 
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B, C, D>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>) -> FStream<(A, B, C, D)> {
-    let stream = FStream<(A, B, C, D)>(memoryMode: .NoMemory)
+public func combine<A, B, C, D>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>) -> FStream<(A, B, C, D)> {
+    let stream = FStream<(A, B, C, D)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
@@ -1198,8 +1198,8 @@ public func combine<A, B, C, D>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C
 /// Combine a number of streams and emit values when any of them emit a value.
 ///
 /// All streams must have had at least one value before anything happens.
-public func combine<A, B, C, D, E>(_ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>, _ e: FStream<E>) -> FStream<(A, B, C, D, E)> {
-    let stream = FStream<(A, B, C, D, E)>(memoryMode: .NoMemory)
+public func combine<A, B, C, D, E>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>, _ e: FStream<E>) -> FStream<(A, B, C, D, E)> {
+    let stream = FStream<(A, B, C, D, E)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
     var va: A? = nil
     var vb: B? = nil
