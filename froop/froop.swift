@@ -801,7 +801,7 @@ typealias Imitation = () -> Void
 
 /// Helper type to thread safely lock a value L. It is accessed via a closure.
 fileprivate class Locker<L> {
-    private let semaphore = DispatchSemaphore(value: 1)
+    private let nslock = NSLock()
     private var value: L
     
     init(value: L) {
@@ -810,9 +810,9 @@ fileprivate class Locker<L> {
     
     /// Access the locked in value
     func withValue<X>(closure: (inout L) -> X) -> X {
-        self.semaphore.wait()
+        nslock.lock()
         let x = closure(&self.value)
-        self.semaphore.signal()
+        nslock.unlock()
         return x
     }
 }
