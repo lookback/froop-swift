@@ -261,14 +261,33 @@ public class FStream<T>: Equatable {
     fileprivate func attachImitator(_ imitator: FImitator<T>) -> Subscription<T> {
         let inner = imitator.inner;
         return self.inner.withValue() {
+
+            var todo: [T?] = []
+            func takeTodo() -> [T?] {
+                let t = todo
+                todo = []
+                return t
+            }
+            let queue = DispatchQueue(label:"attachImitator") // queue protecting "todo"
+
             let strong = $0.subscribeStrong(peg: self.parent) { t in
+                // the observed order of values of this subscribe must be preserved
+                // we put each value into the todo array and ensure the array
+                // is processed in order.
+                queue.async() { todo.append(t) }
+
                 // an imitation is a "todo" closure that captures the value to be
                 // dispatched later into the imitator. the todo is added to a
                 // thread local and is called later, after the current evaluation
                 // finishes.
                 let todo: Imitation = {
-                    inner.withValue() { $0.update(t) }
+                    inner.withValue() {
+                        let toDispatch = queue.sync() { takeTodo() }
+                        toDispatch.forEach($0.update)
+                     }
                 }
+
+                // add to thread local to be executed after current tree eval
                 imitations.withValue() {
                     $0.withValue() {
                         $0.append(todo)
