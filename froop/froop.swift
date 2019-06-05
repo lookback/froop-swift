@@ -259,38 +259,13 @@ public class FStream<T>: Equatable {
 
     /// Internal function that starts an imitator.
     fileprivate func attachImitator(_ imitator: FImitator<T>) -> Subscription<T> {
-        let inner = imitator.inner;
+        let imitatorInner = imitator.inner;
         return self.inner.withValue() {
-
-            var todo: [T?] = []
-            func takeTodo() -> [T?] {
-                let t = todo
-                todo = []
-                return t
-            }
-            let queue = DispatchQueue(label:"attachImitator") // queue protecting "todo"
-
             let strong = $0.subscribeStrong(peg: self.parent) { t in
-                // the observed order of values of this subscribe must be preserved
-                // we put each value into the todo array and ensure the array
-                // is processed in order.
-                queue.async() { todo.append(t) }
-
-                // an imitation is a "todo" closure that captures the value to be
-                // dispatched later into the imitator. the todo is added to a
-                // thread local and is called later, after the current evaluation
-                // finishes.
-                let todo: Imitation = {
-                    inner.withValue() {
-                        let toDispatch = queue.sync() { takeTodo() }
-                        toDispatch.forEach($0.update)
-                     }
-                }
-
-                // add to thread local to be executed after current tree eval
-                imitations.withValue() {
-                    $0.withValue() {
-                        $0.append(todo)
+                // Ensure that imitators are updated after this runloop
+                imitatorQueue.async() {
+                    imitatorInner.withValue() {
+                        $0.update(t)
                     }
                 }
             }
@@ -789,14 +764,9 @@ public class FImitator<T> {
     }
 }
 
-
-/// Thread local collector of imitations that are to be done once the current stream
-/// invocation finishes. This is how we make sync imitations happen.
-///
-/// Amazingly ThreadLocal is not thread safe, so we are forced to wrap it in a locker.
-private let imitations: Locker<ThreadLocal<[Imitation]>> = Locker(value: ThreadLocal(value: []))
-typealias Imitation = () -> Void
-
+// Imitators waiting to be updated.
+// TODO: Make threadlocal dict of queues
+let imitatorQueue = DispatchQueue(label:"attachImitator")
 
 
 /// Helper type to thread safely lock a value L. It is accessed via a closure.
@@ -890,31 +860,15 @@ fileprivate class Inner<T> {
     
     /// Update that also runs imitators after the update finishes.
     func updateAndImitate(_ t: T?) {
-        // normal update
+        imitatorQueue.suspend()
         self.update(t)
-
-        // any imitator that have been gathered during the update is executed now
-        // sync with the same update. keep doing this until there are no more
-        // imitators added.
-        while true {
-            var todo: [Imitation] = []
-            // this is inside a lock, we must get the value out and release
-            // the lock since the imitator run might need the lock to add
-            // more imitators (i.e. avoid deadlock).
-            imitations.withValue() {
-                $0.withValue() {
-                    todo = $0
-                    $0 = []
-                }
-            }
-            if todo.isEmpty {
-                // nothing to do
-                break
-            } else {
-                // run all imitators
-                todo.forEach() { $0() }
-            }
-        }
+        
+        // wait for all imitators to update
+        let barrier = DispatchSemaphore(value: 0)
+        imitatorQueue.async { barrier.signal() }
+        imitatorQueue.resume()
+        barrier.wait()
+        
     }
 
     /// Update a new value to the stream. `nil` indicates the end of the stream
