@@ -281,7 +281,7 @@ public class FStream<T>: Equatable {
                 // thread local and is called later, after the current evaluation
                 // finishes.
                 let todo: Imitation = {
-                    inner.withValue() {
+                    inner.withImmutableValue() {
                         let toDispatch = queue.sync() { takeTodo() }
                         toDispatch.forEach($0.update)
                      }
@@ -761,7 +761,7 @@ public class Subscription<T> {
 /// ```
 ///
 public class FImitator<T> {
-    fileprivate var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory))
+    fileprivate var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory), recursive: true)
     private var imitating = false
 
     public init() {
@@ -801,10 +801,11 @@ typealias Imitation = () -> Void
 
 /// Helper type to thread safely lock a value L. It is accessed via a closure.
 fileprivate class Locker<L> {
-    private let nslock = NSLock()
+    private let nslock: NSLocking
     private var value: L
     
-    init(value: L) {
+    init(value: L, recursive: Bool = false) {
+        self.nslock = recursive ? NSRecursiveLock() : NSLock()
         self.value = value
     }
     
@@ -815,6 +816,14 @@ fileprivate class Locker<L> {
         nslock.unlock()
         return x
     }
+    
+    func withImmutableValue<X>(closure: (L) -> X) -> X {
+        nslock.lock()
+        let x = closure(self.value)
+        nslock.unlock()
+        return x
+    }
+
 }
 
 
