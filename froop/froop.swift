@@ -268,7 +268,9 @@ public class FStream<T>: Equatable {
                 todo = []
                 return t
             }
-            let queue = DispatchQueue(label:"attachImitator") // queue protecting "todo"
+            // queue protecting "todo"
+            let queue = DispatchQueue(label:"attachImitator", qos: .userInitiated,
+                                      attributes: [], autoreleaseFrequency: .workItem)
 
             let strong = $0.subscribeStrong(peg: self.parent) { t in
                 // the observed order of values of this subscribe must be preserved
