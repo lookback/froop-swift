@@ -284,7 +284,7 @@ public class FStream<T>: Equatable {
                 // finishes.
                 let todo: Imitation = {
                     inner.withImmutableValue() {
-                        let toDispatch = queue.sync() { takeTodo() }
+                        let toDispatch = queue.sync() { autoreleasepool { takeTodo() } }
                         toDispatch.forEach($0.update)
                      }
                 }
