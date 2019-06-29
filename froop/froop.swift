@@ -276,7 +276,7 @@ public class FStream<T>: Equatable {
                 // the observed order of values of this subscribe must be preserved
                 // we put each value into the todo array and ensure the array
                 // is processed in order.
-                queue.async() { todo.append(t) }
+                queue.sync() { todo.append(t) }
 
                 // an imitation is a "todo" closure that captures the value to be
                 // dispatched later into the imitator. the todo is added to a
