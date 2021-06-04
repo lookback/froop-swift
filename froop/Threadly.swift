@@ -28,16 +28,15 @@
 import Foundation
 
 private final class _Key<T> {
-    
     var raw: pthread_key_t
-    
+
     var box: Box<T>? {
         guard let pointer = pthread_getspecific(raw) else {
             return nil
         }
         return Unmanaged<Box<T>>.fromOpaque(pointer).takeUnretainedValue()
     }
-    
+
     init() {
         raw = pthread_key_t()
         pthread_key_create(&raw) {
@@ -49,11 +48,11 @@ private final class _Key<T> {
             Unmanaged<AnyObject>.fromOpaque(rawPointer).release()
         }
     }
-    
+
     deinit {
         pthread_key_delete(raw)
     }
-    
+
     func box(create: () throws -> T) rethrows -> Box<T> {
         if let box = self.box {
             return box
@@ -63,20 +62,17 @@ private final class _Key<T> {
             return box
         }
     }
-    
 }
 
 /// A reference to a heap-allocated value.
 final class Box<Value> {
-    
     /// The boxed value.
     var value: Value
-    
+
     /// Creates an instance that boxes `value`.
     init(_ value: Value) {
         self.value = value
     }
-    
 }
 
 /// A type that takes an initializer to create and then store a value that's
@@ -85,11 +81,10 @@ final class Box<Value> {
 ///
 /// - note: If the initial value isn't known until retrieval, use `DeferredThreadLocal`.
 public struct ThreadLocal<Value>: Hashable {
-    
     fileprivate var _def: DeferredThreadLocal<Value>
-    
+
     private var _create: () -> Value
-    
+
     /// The hash value.
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_def.hashValue)
@@ -99,7 +94,7 @@ public struct ThreadLocal<Value>: Hashable {
     var inner: Box<Value> {
         return _def.inner(createdWith: _create)
     }
-    
+
     /// Creates an instance that will use `value` captured in its current
     /// state for an initial value.
     ///
@@ -111,30 +106,29 @@ public struct ThreadLocal<Value>: Hashable {
             value
         }
     }
-    
+
     /// Creates an instance that will use `value` for an initial value.
     init(value: @escaping @autoclosure () -> Value) {
         self.init(create: value)
     }
-    
+
     /// Creates an instance that will use `create` to generate an initial value.
     public init(create: @escaping () -> Value) {
         _create = create
         _def = DeferredThreadLocal()
     }
-    
+
     /// Creates an instance that uses the same storage as `deferred` but with
     /// `create` as an initializer.
     init(fromDeferred deferred: DeferredThreadLocal<Value>, create: @escaping () -> Value) {
         _create = create
         _def = deferred
     }
-    
+
     /// Returns the result of the closure performed on the value of `self`.
     public func withValue<T>(_ body: (inout Value) throws -> T) rethrows -> T {
         return try body(&inner.value)
     }
-    
 }
 
 /// A type that stores a value unique to the current thread. An initial value
@@ -143,9 +137,8 @@ public struct ThreadLocal<Value>: Hashable {
 /// - note: If the initial value is known at the time of initialization of the
 ///         enclosing type, consider using `ThreadLocal` instead.
 struct DeferredThreadLocal<Value>: Hashable {
-    
     fileprivate var _key: _Key<Value>
-    
+
     /// The hash value.
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_key.raw.hashValue)
@@ -156,41 +149,38 @@ struct DeferredThreadLocal<Value>: Hashable {
     var inner: Box<Value>? {
         return _key.box
     }
-    
+
     /// Creates an instance.
     init() {
         _key = _Key()
     }
-    
+
     /// Returns the inner boxed value for the current thread,
     /// created with `create` if not previously initialized.
     func inner(createdWith create: () throws -> Value) rethrows -> Box<Value> {
         return try _key.box(create: create)
     }
-    
+
     /// Returns the result of the closure performed on the inner thread-local
     /// value of `self`, or `nil` if uninitialized.
     func withValue<T>(_ body: (inout Value) throws -> T) rethrows -> T? {
         return try inner.map { try body(&$0.value) }
     }
-    
+
     /// Returns the result of the closure performed on the inner thread-local
     /// value of `self`, created with `create` if not previously initialized.
     func withValue<T>(createdWith create: () throws -> Value, _ body: (inout Value) throws -> T) rethrows -> T {
         return try body(&inner(createdWith: create).value)
     }
-    
 }
 
 /// A type that has a static thread-local instance.
 protocol ThreadLocalRetrievable {
-    
     /// The thread-local boxed instance of `Self`.
     static var threadLocal: Box<Self> { get }
-    
+
     /// Returns the result of performing the closure on the thread-local instance of `Self`.
     static func withThreadLocal<T>(_ body: (inout Self) throws -> T) rethrows -> T
-    
 }
 
 extension ThreadLocalRetrievable {
@@ -201,11 +191,11 @@ extension ThreadLocalRetrievable {
 }
 
 /// Returns a Boolean value that indicates whether the two arguments have equal values.
-public func ==<T, U>(lhs: ThreadLocal<T>, rhs: ThreadLocal<U>) -> Bool {
+public func == <T, U>(lhs: ThreadLocal<T>, rhs: ThreadLocal<U>) -> Bool {
     return lhs._def == rhs._def
 }
 
 /// Returns a Boolean value that indicates whether the two arguments have equal values.
-func ==<T, U>(lhs: DeferredThreadLocal<T>, rhs: DeferredThreadLocal<U>) -> Bool {
+func == <T, U>(lhs: DeferredThreadLocal<T>, rhs: DeferredThreadLocal<U>) -> Bool {
     return lhs._key.raw == rhs._key.raw
 }

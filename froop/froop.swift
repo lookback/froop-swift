@@ -33,7 +33,7 @@ private var streamCount: Locker<UInt64> = Locker(value: 0)
 ///  a similar pattern.
 public class FStream<T>: Equatable {
     fileprivate let inner: Locker<Inner<T>>
-    fileprivate var parent: Peg? = nil
+    fileprivate var parent: Peg?
     fileprivate let ident: UInt64 = streamCount.withValue() {
         $0 += 1
         return $0
@@ -45,9 +45,9 @@ public class FStream<T>: Equatable {
 
     /// A new stream with a new inner
     fileprivate init(memoryMode: MemoryMode) {
-        self.inner = Locker(value:Inner(memoryMode))
+        inner = Locker(value: Inner(memoryMode))
     }
-    
+
     /// A new stream with a cloned inner
     fileprivate init(inner: Locker<Inner<T>>) {
         self.inner = inner
@@ -74,11 +74,11 @@ public class FStream<T>: Equatable {
         stream.inner.withValue() { $0.update(nil) }
         return stream
     }
-    
+
     /// Subscribe to values from this stream.
     @discardableResult
-    public func subscribe(_ listener: @escaping (T) -> Void ) -> Subscription<T> {
-        return self.inner.withValue() {
+    public func subscribe(_ listener: @escaping (T) -> Void) -> Subscription<T> {
+        return inner.withValue() {
             let strong = $0.subscribeStrong(peg: self.parent) {
                 if let t = $0 {
                     listener(t)
@@ -90,8 +90,8 @@ public class FStream<T>: Equatable {
 
     /// Subscribe to the end of the stream
     @discardableResult
-    public func subscribeEnd(_ listener: @escaping () -> Void ) -> Subscription<T> {
-        return self.inner.withValue() {
+    public func subscribeEnd(_ listener: @escaping () -> Void) -> Subscription<T> {
+        return inner.withValue() {
             let strong = $0.subscribeStrong(peg: self.parent) {
                 if $0 == nil {
                     listener()
@@ -103,28 +103,28 @@ public class FStream<T>: Equatable {
 
     /// Internal subscribe that returns a `Peg` which is used to keep
     /// a weak reference alive of a listener to the parent stream.
-    fileprivate func subscribeInner(_ listener: @escaping (T?) -> Void ) -> Peg {
+    fileprivate func subscribeInner(_ listener: @escaping (T?) -> Void) -> Peg {
         // Peg for the new weak subscription.
-        var peg = self.inner.withValue() {
+        var peg = inner.withValue() {
             $0.subscribeWeak(onvalue: listener)
         }
         // This peg must also keep the parent stream alive.
         // This is for chained operators such as .map().filter().map()
         // where the intermediaries would be unsubscribed otherwise.
-        peg.parent = self.parent as AnyObject
+        peg.parent = parent as AnyObject
         return peg
     }
-    
+
     /// Collect values of this stream into an array of values.
     public func collect() -> Collector<T> {
         let c = Collector<T>()
-        c.parent = self.subscribeInner(c.update)
+        c.parent = subscribeInner(c.update)
         return c
     }
 
     /// Print every object passing through this stream prefixed by the `label`.
     public func debug(_ label: String) -> FStream<T> {
-        return self.map() {
+        return map() {
             froopLog(label, String(describing: $0))
             return $0
         }
@@ -135,8 +135,8 @@ public class FStream<T>: Equatable {
     public func dedupeBy<U: Equatable>(memory: Bool = false, _ f: @escaping (T) -> U) -> FStream<T> {
         let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        var lastU: U? = nil
-        stream.parent = self.subscribeInner() {
+        var lastU: U?
+        stream.parent = subscribeInner() {
             if let t = $0 {
                 let newU = f(t)
                 if lastU != newU {
@@ -149,25 +149,25 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Drop a fixed number of initial values, then start emitting.
     public func drop(memory: Bool = false, amount: UInt) -> FStream<T> {
         var todo = amount + 1
-        return self.dropWhile(memory: memory) { _ in
+        return dropWhile(memory: memory) { _ in
             if todo > 0 {
                 todo -= 1
             }
             return todo > 0
         }
     }
-    
+
     /// Drop values while some condition holds true, then start emitting.
     /// Once started emitting, it will never drop again.
     public func dropWhile(memory: Bool = false, _ f: @escaping (T) -> Bool) -> FStream<T> {
         let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
         var dropping = true
-        stream.parent = self.subscribeInner() {
+        stream.parent = subscribeInner() {
             if let t = $0 {
                 if dropping {
                     dropping = f(t)
@@ -181,12 +181,12 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Make a stream that ends when some other stream ends.
     public func endWhen<U>(memory: Bool = false, other: FStream<U>) -> FStream<T> {
         let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        let p1 = self.subscribeInner() { t in
+        let p1 = subscribeInner() { t in
             // regular values or end, both are propagated
             inner.withValue() { $0.update(t) }
         }
@@ -200,12 +200,12 @@ public class FStream<T>: Equatable {
         stream.parent = Peg(pegs: [p1, p2])
         return stream
     }
-    
+
     /// Filter the stream using some sort of test.
     public func filter(memory: Bool = false, _ f: @escaping (T) -> Bool) -> FStream<T> {
         let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        stream.parent = self.subscribeInner() {
+        stream.parent = subscribeInner() {
             if let t = $0 {
                 if f(t) {
                     inner.withValue() { $0.update(t) }
@@ -221,7 +221,7 @@ public class FStream<T>: Equatable {
     public func filterMap<U>(memory: Bool = false, _ f: @escaping (T) -> U?) -> FStream<U> {
         let stream = FStream<U>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        stream.parent = self.subscribeInner() {
+        stream.parent = subscribeInner() {
             if let t = $0 {
                 let u = f(t)
                 if u != nil {
@@ -233,7 +233,7 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Fold the stream by combining values from the past with the new value.
     /// The seed is emitted as the first value.
     ///
@@ -245,7 +245,7 @@ public class FStream<T>: Equatable {
         inner.withValue() { $0.update(seed) }
         // keep track of previous value
         var prev = seed
-        stream.parent = self.subscribeInner() {
+        stream.parent = subscribeInner() {
             if let t = $0 {
                 let next = f(prev, t)
                 prev = next
@@ -259,9 +259,8 @@ public class FStream<T>: Equatable {
 
     /// Internal function that starts an imitator.
     fileprivate func attachImitator(_ imitator: FImitator<T>) -> Subscription<T> {
-        let inner = imitator.inner;
+        let inner = imitator.inner
         return self.inner.withValue() {
-
             var todo: [T?] = []
             func takeTodo() -> [T?] {
                 let t = todo
@@ -269,7 +268,7 @@ public class FStream<T>: Equatable {
                 return t
             }
             // queue protecting "todo"
-            let queue = DispatchQueue(label:"attachImitator", qos: .userInitiated,
+            let queue = DispatchQueue(label: "attachImitator", qos: .userInitiated,
                                       attributes: [], autoreleaseFrequency: .workItem)
 
             let strong = $0.subscribeStrong(peg: self.parent) { t in
@@ -286,7 +285,7 @@ public class FStream<T>: Equatable {
                     inner.withImmutableValue() {
                         let toDispatch = queue.sync() { autoreleasepool { takeTodo() } }
                         toDispatch.forEach($0.update)
-                     }
+                    }
                 }
 
                 // add to thread local to be executed after current tree eval
@@ -299,13 +298,13 @@ public class FStream<T>: Equatable {
             return Subscription(strong)
         }
     }
-    
+
     /// Makes a stream that only emits the last value.
     public func last(memory: Bool = false) -> FStream<T> {
         let stream = FStream(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        var lastValue: T? = nil
-        stream.parent = self.subscribeInner() {
+        var lastValue: T?
+        stream.parent = subscribeInner() {
             if let t = $0 {
                 lastValue = t
             } else {
@@ -319,7 +318,7 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Transform values of type T to type U.
     public func map<U>(memory: Bool = false, _ f: @escaping (T) -> U) -> FStream<U> {
         // We want to add a listener to `self` and create a new `FStream` instance
@@ -347,14 +346,14 @@ public class FStream<T>: Equatable {
         // the listener. That "peg" then lives inside the new stream instance and thus
         // when they drop together, we automatically "unsubscribe" the weak listener.
         let stream = FStream<U>(memoryMode: memory ? .UntilEnd : .NoMemory)
-        
+
         // We can't use "stream" inside the closure since that would capture the stream instance
         // and thus also the "peg" described above (we would get a cyclic dependency keeping the
         // tree alive). So we get an ARC reference to the inner, which is used to dispatch values.
-        let inner = stream.inner;
-        
+        let inner = stream.inner
+
         // We subscribe to self and back comes the "peg" that goes into the new stream.
-        stream.parent = self.subscribeInner() {
+        stream.parent = subscribeInner() {
             // If it is a value, transform it otherwise end.
             if let t = $0 {
                 inner.withValue() { $0.update(f(t)) }
@@ -364,12 +363,12 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Transform any incoming value to one fixed value.
     public func mapTo<U>(memory: Bool = false, value: U) -> FStream<U> {
         let stream = FStream<U>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        stream.parent = self.subscribeInner() {
+        stream.parent = subscribeInner() {
             if $0 != nil {
                 inner.withValue() { $0.update(value) }
             } else {
@@ -378,18 +377,18 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Make a stream that remembers the last value. Any new (or combinator) will get the
     /// last emitted value straight away.
     public func remember() -> FMemoryStream<T> {
         let stream = FMemoryStream<T>(memoryMode: .UntilEnd)
         let inner = stream.inner
-        stream.parent = self.subscribeInner() { t in
+        stream.parent = subscribeInner() { t in
             inner.withValue() { $0.update(t) }
         }
         return stream
     }
-    
+
     /// For every value of this stream, take a sample of the last value of some other
     /// stream and combine the two.
     ///
@@ -400,50 +399,50 @@ public class FStream<T>: Equatable {
     public func sampleCombine<U>(memory: Bool = false, _ other: FStream<U>) -> FStream<(T, U)> {
         let stream = FStream<(T, U)>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        
+
         // keep track of last U. if this stream ends, we just hold on to the
         // last U forever.
-        var lastU: U? = nil
+        var lastU: U?
         let p1 = other.subscribeInner() {
             if let u = $0 {
                 lastU = u
             }
         }
-        
+
         // for ever incoming value, combine the two
-        let p2 = self.subscribeInner() {
+        let p2 = subscribeInner() {
             if let t = $0 {
                 // only if we have a U
                 if let u = lastU {
-                    inner.withValue() { $0.update((t,u)) }
+                    inner.withValue() { $0.update((t, u)) }
                 }
             } else {
                 inner.withValue() { $0.update(nil) }
             }
         }
-        
+
         // keep both pegged
         stream.parent = Peg(pegs: [p1, p2])
         return stream
     }
-    
+
     /// Prepend a value to a stream. Or in other words, give a start value to a stream.
     public func startWith(value: T) -> FMemoryStream<T> {
         let stream = FMemoryStream<T>(memoryMode: .UntilEnd)
         let inner = stream.inner
         inner.withValue() { $0.update(value) }
-        stream.parent = self.subscribeInner() { t in
+        stream.parent = subscribeInner() { t in
             inner.withValue() { $0.update(t) }
         }
         return stream
     }
-    
+
     /// Take a fixed amount of elements, then end.
     public func take(amount: UInt, memory: Bool = false) -> FStream<T> {
         var todo = amount + 1
         let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        stream.parent = self.subscribeInner() { t in
+        stream.parent = subscribeInner() { t in
             if todo > 0 {
                 todo -= 1
             }
@@ -456,12 +455,12 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Take values from the stream while some condition hold true, then end the stream.
     public func takeWhile(memory: Bool = false, _ f: @escaping (T) -> Bool) -> FStream<T> {
         let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
         let inner = stream.inner
-        stream.parent = self.subscribeInner() {
+        stream.parent = subscribeInner() {
             if let t = $0 {
                 if f(t) {
                     inner.withValue() { $0.update(t) }
@@ -474,11 +473,11 @@ public class FStream<T>: Equatable {
         }
         return stream
     }
-    
+
     /// Stall the thread until the stream to ends.
     public func wait() {
         let waitFor: Locker<DispatchSemaphore?> = Locker(value: DispatchSemaphore(value: 0))
-        let peg = self.remember().subscribeInner() {
+        let peg = remember().subscribeInner() {
             if $0 == nil {
                 waitFor.withValue() {
                     $0?.signal()
@@ -490,17 +489,14 @@ public class FStream<T>: Equatable {
         let w = waitFor.withValue() { $0 }
         w?.wait()
     }
-    
 }
 
-extension FStream where T: Equatable {
-    
+public extension FStream where T: Equatable {
     /// Dedupe the stream by the value in the stream itself
-    public func dedupe(memory: Bool = false) -> FStream<T> {
+    func dedupe(memory: Bool = false) -> FStream<T> {
         func f(t: T) -> T { return t }
-        return self.dedupeBy(memory: memory, f)
+        return dedupeBy(memory: memory, f)
     }
-    
 }
 
 /// Flatten a stream of streams, sequentially. This means that any new stream
@@ -513,7 +509,7 @@ public func flatten<T>(memory: Bool = false, nested: froop.FStream<froop.FStream
     let inner = stream.inner
     var currentIdent: UInt64 = 0
     var outerEnded = false
-    var peg: Peg? = nil
+    var peg: Peg?
     ignore(peg)
     stream.parent = nested.subscribeInner() {
         if let nestedStream = $0 {
@@ -551,11 +547,11 @@ public func flatten<T>(memory: Bool = false, nested: froop.FStream<froop.FStream
 /// Swift doesn't do recursive types, so we can't make an extension for this.
 public func flattenConcurrently<T>(memory: Bool = false, nested: froop.FStream<froop.FStream<T>>) -> FStream<T> {
     let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
-    let currentIdents: Locker<[UInt64]> = Locker(value:[])
+    let currentIdents: Locker<[UInt64]> = Locker(value: [])
     let inner = stream.inner
     stream.parent = nested.subscribeInner() {
         if let nestedStream$ = $0 {
-            var peg: Peg? = nil
+            var peg: Peg?
             ignore(peg)
             let ident = nestedStream$.ident
             // simply overwriting the old value will release the ARC
@@ -581,7 +577,7 @@ public func flattenConcurrently<T>(memory: Bool = false, nested: froop.FStream<f
 public func merge<T>(memory: Bool = false, _ streams: FStream<T>...) -> FStream<T> {
     let stream = FStream<T>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
-    // TODO a better strategy would be to unsubscribe from streams as they end
+    // TODO: a better strategy would be to unsubscribe from streams as they end
     var count = streams.count
     let pegs = streams.map() { stream in stream.subscribeInner() {
         if let t = $0 {
@@ -593,7 +589,7 @@ public func merge<T>(memory: Bool = false, _ streams: FStream<T>...) -> FStream<
                 inner.withValue() { $0.update(nil) }
             }
         }
-        }
+    }
     }
     stream.parent = Peg(pegs: pegs)
     return stream
@@ -601,15 +597,14 @@ public func merge<T>(memory: Bool = false, _ streams: FStream<T>...) -> FStream<
 
 /// Specialization of FStream that has "memory". Memory means that any
 /// new listener added will straight away get the last value that went through the stream.
-public class FMemoryStream<T> : FStream<T> {
+public class FMemoryStream<T>: FStream<T> {
     // The actual implementation of this is entirely in the `Inner` class.
     // We just inherit to make a clearer type to the user of this API.
-    
-    fileprivate override init(memoryMode: MemoryMode) {
+
+    override fileprivate init(memoryMode: MemoryMode) {
         super.init(memoryMode: memoryMode)
     }
 }
-
 
 /// The originator of a stream of values.
 ///
@@ -624,42 +619,40 @@ public class FMemoryStream<T> : FStream<T> {
 /// sink.end()
 /// ```
 public class FSink<T> {
-    private var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory))
-    
+    private var inner: Locker<Inner<T>> = Locker(value: Inner(.NoMemory))
+
     /// Create a new sink.
     public init() {
     }
-    
+
     /// Get a stream from this sink. Can be used multiple times and each instance
     /// will be backed by the same sink.
     public func stream() -> FStream<T> {
-        return FStream(inner: self.inner)
+        return FStream(inner: inner)
     }
-    
+
     /// Update a value into the sink and all connected streams.
     public func update(_ t: T) {
-        self.inner.withValue() { $0.updateAndImitate(t) }
+        inner.withValue() { $0.updateAndImitate(t) }
     }
-    
+
     /// End this sink. No more values can be sent after this.
     public func end() {
-        self.inner.withValue() { $0.updateAndImitate(nil) }
+        inner.withValue() { $0.updateAndImitate(nil) }
     }
 }
-
-
 
 /// Helper to collect values from a stream. Mainly useful for tests.
 public class Collector<T> {
     private let inner: Locker<CollectorInner<T>>
-    fileprivate var parent: Peg? = nil
-    
+    fileprivate var parent: Peg?
+
     fileprivate init() {
         inner = Locker(value: CollectorInner<T>())
     }
-    
-    fileprivate func update(_ t:T?) {
-        self.inner.withValue() {
+
+    fileprivate func update(_ t: T?) {
+        inner.withValue() {
             if !$0.alive {
                 return
             }
@@ -671,23 +664,23 @@ public class Collector<T> {
             }
         }
     }
-    
+
     /// Stall the thread and wait for the stream this collector works off to end.
     public func wait() -> [T] {
-        let waitFor = self.inner.withValue() {
+        let waitFor = inner.withValue() {
             $0.alive ? $0.waitFor : nil
         }
         if let waitFor = waitFor {
             waitFor.wait()
         }
-        return self.take()
+        return take()
     }
-    
+
     /// Take whatever values are in the collector without waiting for
     /// the stream to end.
     public func take() -> [T] {
-        return self.inner.withValue() {
-            let v = $0.values;
+        return inner.withValue() {
+            let v = $0.values
             $0.values = []
             return v
         }
@@ -699,7 +692,6 @@ fileprivate struct CollectorInner<T> {
     var values: [T] = []
     let waitFor = DispatchSemaphore(value: 0)
 }
-
 
 /// Subscriptions are receipts to the `FStream.subscribe()` operation. They
 /// can be used to unsubscribe.
@@ -718,20 +710,20 @@ public class Subscription<T> {
 
     /// Set to true to automatically unsubscribe when the subscription deinits
     private var doUnsubscribeOnDeinit: Bool = false
-    
+
     fileprivate init(_ strong: Strong<Listener<T>>) {
         self.strong = strong
     }
-    
+
     /// Unsubscribe from further updates.
     public func unsubscribe() {
-        self.strong?.clear()
-        self.strong = nil
+        strong?.clear()
+        strong = nil
     }
 
     /// Make subscription such that it stops on deinit.
     public func unsubscribeOnDeinit() -> Subscription<T> {
-        self.doUnsubscribeOnDeinit = true
+        doUnsubscribeOnDeinit = true
         return self
     }
 
@@ -741,7 +733,6 @@ public class Subscription<T> {
         }
     }
 }
-
 
 /// Imitators are used to create cyclic streams. The imitator is an originator
 /// of a stream at the same time as it imitates some other stream further down
@@ -763,7 +754,7 @@ public class Subscription<T> {
 /// ```
 ///
 public class FImitator<T> {
-    fileprivate var inner: Locker<Inner<T>> = Locker(value:Inner(.NoMemory), recursive: true)
+    fileprivate var inner: Locker<Inner<T>> = Locker(value: Inner(.NoMemory), recursive: true)
     private var imitating = false
 
     public init() {
@@ -772,9 +763,9 @@ public class FImitator<T> {
     /// Get a stream from this imitator. Can be used multiple times and each instance
     /// will be backed by the same imitator.
     public func stream() -> FStream<T> {
-        return FStream(inner: self.inner)
+        return FStream(inner: inner)
     }
-    
+
     /// Start imitating another stream. This can be called exactly once.
     /// Repeated calls will `fatalError`.
     ///
@@ -783,14 +774,13 @@ public class FImitator<T> {
     /// ending streams, the returned subscription is used.
     @discardableResult
     public func imitate(other: FStream<T>) -> Subscription<T> {
-        if self.imitating {
+        if imitating {
             fatalError("imitate() used twice on the same imitator")
         }
-        self.imitating = true
+        imitating = true
         return other.attachImitator(self)
     }
 }
-
 
 /// Thread local collector of imitations that are to be done once the current stream
 /// invocation finishes. This is how we make sync imitations happen.
@@ -799,36 +789,31 @@ public class FImitator<T> {
 private let imitations: Locker<ThreadLocal<[Imitation]>> = Locker(value: ThreadLocal(value: []))
 typealias Imitation = () -> Void
 
-
-
 /// Helper type to thread safely lock a value L. It is accessed via a closure.
 fileprivate class Locker<L> {
     private let nslock: NSLocking
     private var value: L
-    
+
     init(value: L, recursive: Bool = false) {
-        self.nslock = recursive ? NSRecursiveLock() : NSLock()
+        nslock = recursive ? NSRecursiveLock() : NSLock()
         self.value = value
     }
-    
+
     /// Access the locked in value
     func withValue<X>(closure: (inout L) -> X) -> X {
         nslock.lock()
-        let x = closure(&self.value)
+        let x = closure(&value)
         nslock.unlock()
         return x
     }
-    
+
     func withImmutableValue<X>(closure: (L) -> X) -> X {
         nslock.lock()
-        let x = closure(self.value)
+        let x = closure(value)
         nslock.unlock()
         return x
     }
-
 }
-
-
 
 /// The kinds of memory modes we have
 enum MemoryMode {
@@ -838,14 +823,12 @@ enum MemoryMode {
     case UntilEnd
     /// Remember values, also after the stream ends
     case AfterEnd
-    
+
     /// Test if this has memory
     func isMemory() -> Bool {
         return self == .UntilEnd || self == .AfterEnd
     }
 }
-
-
 
 /// The inner type in a FStream that is protected via a Locker
 fileprivate class Inner<T> {
@@ -853,17 +836,17 @@ fileprivate class Inner<T> {
     var ws: [Weak<Listener<T>>] = []
     var ss: [Strong<Listener<T>>] = []
     var memoryMode: MemoryMode
-    var lastValue: T? = nil
+    var lastValue: T?
 
     init(_ memoryMode: MemoryMode) {
         self.memoryMode = memoryMode
     }
-    
+
     /// Weakly subscribe to values passing this instance
     func subscribeWeak(onvalue: @escaping (T?) -> Void) -> Peg {
         if !alive {
-            if self.memoryMode == .AfterEnd {
-                onvalue(self.lastValue)
+            if memoryMode == .AfterEnd {
+                onvalue(lastValue)
             } else {
                 onvalue(nil)
             }
@@ -872,18 +855,18 @@ fileprivate class Inner<T> {
         let l = Listener(closure: onvalue)
         let w = Weak(value: l)
         let p = Peg(l: l)
-        self.ws.append(w)
-        if self.memoryMode.isMemory(), let value = self.lastValue {
+        ws.append(w)
+        if memoryMode.isMemory(), let value = lastValue {
             onvalue(value)
         }
         return p
     }
-    
+
     /// Strongly subscribe to values passing this instance
     func subscribeStrong(peg: Peg?, onvalue: @escaping (T?) -> Void) -> Strong<Listener<T>> {
         if !alive {
-            if self.memoryMode == .AfterEnd {
-                onvalue(self.lastValue)
+            if memoryMode == .AfterEnd {
+                onvalue(lastValue)
             } else {
                 onvalue(nil)
             }
@@ -892,17 +875,17 @@ fileprivate class Inner<T> {
         let l = Listener(closure: onvalue)
         l.extra = peg as AnyObject
         let s = Strong(value: l)
-        if self.memoryMode.isMemory(), let value = self.lastValue {
+        if memoryMode.isMemory(), let value = lastValue {
             onvalue(value)
         }
-        self.ss.append(s)
+        ss.append(s)
         return s
     }
-    
+
     /// Update that also runs imitators after the update finishes.
     func updateAndImitate(_ t: T?) {
         // normal update
-        self.update(t)
+        update(t)
 
         // any imitator that have been gathered during the update is executed now
         // sync with the same update. keep doing this until there are no more
@@ -936,42 +919,40 @@ fileprivate class Inner<T> {
 
         // strong subscribers get the value first, only
         // keep listeners that haven't unsubscribed
-        self.ss = self.ss.filter() {
+        ss = ss.filter() {
             guard let s = $0.get() else {
                 return false
             }
             s.apply(t: t)
             return true
         }
-        
+
         // weak subscribers second, only keep the
         // ones that are still there.
-        self.ws = self.ws.filter() {
+        ws = ws.filter() {
             guard let w = $0.get() else {
                 return false
             }
             w.apply(t: t)
             return true
         }
-        
+
         // nil indicates the end of the stream
         if t == nil {
             alive = false
             // release all listeners
-            self.ws = []
-            self.ss = []
-            if self.memoryMode != .AfterEnd {
-                self.lastValue = nil
+            ws = []
+            ss = []
+            if memoryMode != .AfterEnd {
+                lastValue = nil
             }
         } else {
-            if self.memoryMode.isMemory() {
-                self.lastValue = t
+            if memoryMode.isMemory() {
+                lastValue = t
             }
         }
     }
 }
-
-
 
 /// A listener is just a closure here wrapped in a class so
 /// we can in turn put it inside a `Weak` or `Strong`.
@@ -982,8 +963,9 @@ fileprivate class Listener<T> {
     init(closure: @escaping (T?) -> Void) {
         self.closure = closure
     }
+
     func apply(t: T?) {
-        self.closure(t)
+        closure(t)
     }
 }
 
@@ -992,19 +974,17 @@ fileprivate class Listener<T> {
 /// to a parent stream and make the lifetime of the ARC "live" in
 /// the child object.
 fileprivate struct Peg {
-    var parent: AnyObject? = nil
+    var parent: AnyObject?
     var l: AnyObject?
-    
+
     init(l: AnyObject) {
         self.l = l
     }
-    
+
     init(pegs: [Peg]) {
-        self.l = pegs as AnyObject
+        l = pegs as AnyObject
     }
 }
-
-
 
 /// Protocol to make `Weak` and `Strong` behave the same.
 fileprivate protocol Get {
@@ -1012,39 +992,36 @@ fileprivate protocol Get {
     func get() -> W?
 }
 
-
-
 /// Weak reference to some object
-fileprivate class Weak<W: AnyObject> : Get {
-    weak var value : W?
+fileprivate class Weak<W: AnyObject>: Get {
+    weak var value: W?
     init(value: W) {
         self.value = value
     }
+
     func get() -> W? {
         return value
     }
 }
 
-
-
 /// Strong reference to some object
-fileprivate class Strong<W: AnyObject> : Get {
+fileprivate class Strong<W: AnyObject>: Get {
     var value: W?
     init(value: W?) {
         self.value = value
     }
+
     func get() -> W? {
         return value
     }
+
     func clear() {
-        self.value = nil
+        value = nil
     }
 }
 
 /// Dummy function to let us ignore values that are not read.
-func ignore<T>(_ _x: T) {}
-
-
+func ignore<T>(_: T) {}
 
 // MARK: ABANDON ALL HOPE YE WHO ENTERS HERE!
 
@@ -1054,15 +1031,15 @@ func ignore<T>(_ _x: T) {}
 public func combine<A, B>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>) -> FStream<(A, B)> {
     let stream = FStream<(A, B)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
-    var va: A? = nil
-    var vb: B? = nil
+    var va: A?
+    var vb: B?
     let emit = { inner.withValue() {
         if let a = va {
             if let b = vb {
                 $0.update((a, b))
             }
         }
-        }
+    }
     }
     var count = 2
     let pegs: [Peg] = [
@@ -1087,7 +1064,7 @@ public func combine<A, B>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>
                     inner.withValue() { $0.update(nil) }
                 }
             }
-        }
+        },
     ]
     stream.parent = Peg(pegs: pegs)
     return stream
@@ -1099,9 +1076,9 @@ public func combine<A, B>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>
 public func combine<A, B, C>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>) -> FStream<(A, B, C)> {
     let stream = FStream<(A, B, C)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
-    var va: A? = nil
-    var vb: B? = nil
-    var vc: C? = nil
+    var va: A?
+    var vb: B?
+    var vc: C?
     let emit = { inner.withValue() {
         if let a = va {
             if let b = vb {
@@ -1110,7 +1087,7 @@ public func combine<A, B, C>(memory: Bool = false, _ a: FStream<A>, _ b: FStream
                 }
             }
         }
-        }
+    }
     }
     var count = 3
     let pegs: [Peg] = [
@@ -1146,7 +1123,7 @@ public func combine<A, B, C>(memory: Bool = false, _ a: FStream<A>, _ b: FStream
                     inner.withValue() { $0.update(nil) }
                 }
             }
-        }
+        },
     ]
     stream.parent = Peg(pegs: pegs)
     return stream
@@ -1158,10 +1135,10 @@ public func combine<A, B, C>(memory: Bool = false, _ a: FStream<A>, _ b: FStream
 public func combine<A, B, C, D>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>) -> FStream<(A, B, C, D)> {
     let stream = FStream<(A, B, C, D)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
-    var va: A? = nil
-    var vb: B? = nil
-    var vc: C? = nil
-    var vd: D? = nil
+    var va: A?
+    var vb: B?
+    var vc: C?
+    var vd: D?
     let emit = { inner.withValue() {
         if let a = va {
             if let b = vb {
@@ -1172,7 +1149,7 @@ public func combine<A, B, C, D>(memory: Bool = false, _ a: FStream<A>, _ b: FStr
                 }
             }
         }
-        }
+    }
     }
     var count = 4
     let pegs: [Peg] = [
@@ -1219,7 +1196,7 @@ public func combine<A, B, C, D>(memory: Bool = false, _ a: FStream<A>, _ b: FStr
                     inner.withValue() { $0.update(nil) }
                 }
             }
-        }
+        },
     ]
     stream.parent = Peg(pegs: pegs)
     return stream
@@ -1231,11 +1208,11 @@ public func combine<A, B, C, D>(memory: Bool = false, _ a: FStream<A>, _ b: FStr
 public func combine<A, B, C, D, E>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>, _ e: FStream<E>) -> FStream<(A, B, C, D, E)> {
     let stream = FStream<(A, B, C, D, E)>(memoryMode: memory ? .UntilEnd : .NoMemory)
     let inner = stream.inner
-    var va: A? = nil
-    var vb: B? = nil
-    var vc: C? = nil
-    var vd: D? = nil
-    var ve: E? = nil
+    var va: A?
+    var vb: B?
+    var vc: C?
+    var vd: D?
+    var ve: E?
     let emit = { inner.withValue() {
         if let a = va {
             if let b = vb {
@@ -1248,7 +1225,7 @@ public func combine<A, B, C, D, E>(memory: Bool = false, _ a: FStream<A>, _ b: F
                 }
             }
         }
-        }
+    }
     }
     var count = 5
     let pegs: [Peg] = [
@@ -1306,7 +1283,7 @@ public func combine<A, B, C, D, E>(memory: Bool = false, _ a: FStream<A>, _ b: F
                     inner.withValue() { $0.update(nil) }
                 }
             }
-        }
+        },
     ]
     stream.parent = Peg(pegs: pegs)
     return stream
