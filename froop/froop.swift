@@ -1288,3 +1288,104 @@ public func combine<A, B, C, D, E>(memory: Bool = false, _ a: FStream<A>, _ b: F
     stream.parent = Peg(pegs: pegs)
     return stream
 }
+
+/// Combine a number of streams and emit values when any of them emit a value.
+///
+/// All streams must have had at least one value before anything happens.
+public func combine<A, B, C, D, E, F>(memory: Bool = false, _ a: FStream<A>, _ b: FStream<B>, _ c: FStream<C>, _ d: FStream<D>, _ e: FStream<E>, _ f: FStream<F>) -> FStream<(A, B, C, D, E, F)> {
+    let stream = FStream<(A, B, C, D, E, F)>(memoryMode: memory ? .UntilEnd : .NoMemory)
+    let inner = stream.inner
+    var va: A?
+    var vb: B?
+    var vc: C?
+    var vd: D?
+    var ve: E?
+    var vf: F?
+    let emit = { inner.withValue() {
+        if let a = va {
+            if let b = vb {
+                if let c = vc {
+                    if let d = vd {
+                        if let e = ve {
+                            if let f = vf {
+                                $0.update((a, b, c, d, e, f))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    }
+    var count = 5
+    let pegs: [Peg] = [
+        a.subscribeInner() {
+            if let t = $0 {
+                va = t
+                emit()
+            } else {
+                count -= 1
+                if count == 0 {
+                    inner.withValue() { $0.update(nil) }
+                }
+            }
+        },
+        b.subscribeInner() {
+            if let t = $0 {
+                vb = t
+                emit()
+            } else {
+                count -= 1
+                if count == 0 {
+                    inner.withValue() { $0.update(nil) }
+                }
+            }
+        },
+        c.subscribeInner() {
+            if let t = $0 {
+                vc = t
+                emit()
+            } else {
+                count -= 1
+                if count == 0 {
+                    inner.withValue() { $0.update(nil) }
+                }
+            }
+        },
+        d.subscribeInner() {
+            if let t = $0 {
+                vd = t
+                emit()
+            } else {
+                count -= 1
+                if count == 0 {
+                    inner.withValue() { $0.update(nil) }
+                }
+            }
+        },
+        e.subscribeInner() {
+            if let t = $0 {
+                ve = t
+                emit()
+            } else {
+                count -= 1
+                if count == 0 {
+                    inner.withValue() { $0.update(nil) }
+                }
+            }
+        },
+        f.subscribeInner() {
+            if let t = $0 {
+                vf = t
+                emit()
+            } else {
+                count -= 1
+                if count == 0 {
+                    inner.withValue() { $0.update(nil) }
+                }
+            }
+        },
+    ]
+    stream.parent = Peg(pegs: pegs)
+    return stream
+}
